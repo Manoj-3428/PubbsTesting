@@ -1,0 +1,786 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:orientation="vertical"
+        android:scrollbars="none">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/grey_900">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/sell_locks_container"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@color/white">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/card0"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/twenty_dp"
+                    android:layout_marginTop="@dimen/twenty_four_dp"
+                    android:background="@color/white"
+                    app:cardCornerRadius="@dimen/four_dp"
+                    app:cardElevation="@dimen/twenty_dp"
+                    app:layout_constraintTop_toBottomOf="@id/toolbar_layout">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/white"
+                        android:paddingVertical="@dimen/twenty_four_dp">
+
+                        <TextView
+                            android:id="@+id/organisation_name"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/twenty_four_dp"
+                            android:layout_marginTop="@dimen/thirty_two_dp"
+                            android:backgroundTint="@color/grey_600"
+                            android:fontFamily="@font/comfortaa_regular"
+                            android:hint="@string/organisation_name"
+                            android:inputType="textCapWords"
+                            android:paddingStart="@dimen/eight_dp"
+                            android:paddingTop="@dimen/eight_dp"
+                            android:paddingBottom="@dimen/sixteen_dp"
+                            android:textColor="@color/black"
+                            android:textColorHint="@color/black"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/toolbar_layout" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginHorizontal="@dimen/twenty_dp"
+                            android:background="@color/grey_600"
+                            app:layout_constraintTop_toBottomOf="@+id/organisation_name" />
+
+                        <TextView
+                            android:id="@+id/email_id"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/twenty_four_dp"
+                            android:layout_marginTop="@dimen/sixteen_dp"
+                            android:backgroundTint="@color/grey_600"
+                            android:fontFamily="@font/comfortaa_regular"
+                            android:hint="@string/email_id"
+                            android:inputType="textEmailAddress"
+                            android:paddingStart="@dimen/eight_dp"
+                            android:paddingTop="@dimen/eight_dp"
+                            android:paddingBottom="@dimen/sixteen_dp"
+                            android:textColor="@color/black"
+                            android:textColorHint="@color/black"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/organisation_name" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginHorizontal="@dimen/twenty_dp"
+                            android:background="@color/grey_600"
+                            app:layout_constraintTop_toBottomOf="@+id/email_id" />
+
+                        <TextView
+                            android:id="@+id/phone_number"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/twenty_four_dp"
+                            android:layout_marginTop="@dimen/sixteen_dp"
+                            android:backgroundTint="@color/grey_600"
+                            android:fontFamily="@font/comfortaa_regular"
+                            android:hint="@string/phone"
+                            android:inputType="phone"
+                            android:paddingStart="@dimen/eight_dp"
+                            android:paddingTop="@dimen/eight_dp"
+                            android:paddingEnd="@dimen/sixteen_dp"
+                            android:paddingBottom="@dimen/sixteen_dp"
+                            android:textColor="@color/black"
+                            android:textColorHint="@color/black"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/email_id" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginHorizontal="@dimen/twenty_dp"
+                            android:background="@color/grey_600"
+                            app:layout_constraintTop_toBottomOf="@+id/phone_number" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.cardview.widget.CardView>
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/card5"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/twenty_dp"
+                    android:layout_marginTop="@dimen/thirty_two_dp"
+                    android:layout_marginBottom="@dimen/twenty_dp"
+                    app:cardCornerRadius="@dimen/four_dp"
+                    app:cardElevation="@dimen/twenty_dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/card0">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@color/white"
+                        android:paddingBottom="@dimen/twelve_dp">
+
+                        <TextView
+                            android:id="@+id/title1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/twenty_four_dp"
+                            android:layout_marginTop="@dimen/thirty_two_dp"
+                            android:fontFamily="@font/comfortaa_regular"
+                            android:text="@string/choose_lock_type"
+                            android:textColor="@color/black"
+                            android:textSize="@dimen/sixteen_sp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/card1"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/twenty_dp"
+                            android:layout_marginTop="@dimen/thirty_two_dp"
+                            android:background="@color/white"
+                            app:cardElevation="@dimen/ten_dp"
+                            app:layout_constraintTop_toBottomOf="@id/title1">
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@color/white"
+                                android:padding="@dimen/eight_dp">
+
+                                <TextView
+                                    android:id="@+id/title_AT_BLE_1"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/twenty_four_dp"
+                                    android:fontFamily="@font/comfortaa_regular"
+                                    android:text="@string/at_ble"
+                                    android:textColor="@color/black"
+                                    android:textSize="@dimen/fourteen_sp"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <androidx.constraintlayout.widget.ConstraintLayout
+                                    android:id="@+id/btn1"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                                    app:layout_constraintBottom_toBottomOf="@+id/title_AT_BLE_1"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="@+id/title_AT_BLE_1">
+
+                                    <EditText
+                                        android:id="@+id/value_at_ble1"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:backgroundTint="@color/white"
+                                        android:fontFamily="@font/comfortaa_regular"
+                                        android:inputType="number"
+                                        android:minLines="1"
+                                        android:paddingHorizontal="@dimen/sixteen_dp"
+                                        android:text="@string/zero"
+                                        android:textColor="@color/black"
+                                        android:textSize="@dimen/fourteen_sp"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@id/decrement_at_ble1"
+                                        app:layout_constraintStart_toEndOf="@id/increment_at_ble1"
+                                        app:layout_constraintTop_toTopOf="parent" />
+
+                                    <ImageButton
+                                        android:id="@+id/increment_at_ble1"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_up_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@+id/value_at_ble1"
+                                        app:layout_constraintStart_toStartOf="parent"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/increment"/>
+
+                                    <ImageButton
+                                        android:id="@+id/decrement_at_ble1"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_down_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toEndOf="parent"
+                                        app:layout_constraintStart_toEndOf="@id/value_at_ble1"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/decrement"/>
+
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/card2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/twenty_dp"
+                            android:layout_marginTop="@dimen/twenty_dp"
+                            android:background="@color/white"
+                            app:cardElevation="@dimen/ten_dp"
+                            app:layout_constraintTop_toBottomOf="@id/card1">
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@color/white"
+                                android:padding="@dimen/eight_dp">
+
+                                <TextView
+                                    android:id="@+id/title_AT_BLE_GSM"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/twenty_four_dp"
+                                    android:fontFamily="@font/comfortaa_regular"
+                                    android:text="@string/at_ble_gsm"
+                                    android:textColor="@color/black"
+                                    android:textSize="@dimen/fourteen_sp"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <androidx.constraintlayout.widget.ConstraintLayout
+                                    android:id="@+id/btn2"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                                    app:layout_constraintBottom_toBottomOf="@+id/title_AT_BLE_GSM"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="@+id/title_AT_BLE_GSM">
+
+                                    <EditText
+                                        android:id="@+id/value_at_ble_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:backgroundTint="@color/white"
+                                        android:fontFamily="@font/comfortaa_regular"
+                                        android:inputType="number"
+                                        android:minLines="1"
+                                        android:paddingHorizontal="@dimen/sixteen_dp"
+                                        android:text="@string/zero"
+                                        android:textColor="@color/black"
+                                        android:textSize="@dimen/fourteen_sp"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@id/decrement_at_ble_gsm"
+                                        app:layout_constraintStart_toEndOf="@id/increment_at_ble_gsm"
+                                        app:layout_constraintTop_toTopOf="parent" />
+
+                                    <ImageButton
+                                        android:id="@+id/increment_at_ble_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_up_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@+id/value_at_ble_gsm"
+                                        app:layout_constraintStart_toStartOf="parent"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/increment"/>
+
+                                    <ImageButton
+                                        android:id="@+id/decrement_at_ble_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_down_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toEndOf="parent"
+                                        app:layout_constraintStart_toEndOf="@id/value_at_ble_gsm"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/decrement"/>
+
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/card3"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/twenty_dp"
+                            android:layout_marginTop="@dimen/twenty_dp"
+                            android:background="@color/white"
+                            app:cardElevation="@dimen/ten_dp"
+                            app:layout_constraintTop_toBottomOf="@id/card2">
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@color/white"
+                                android:padding="@dimen/eight_dp">
+
+                                <TextView
+                                    android:id="@+id/title_NR_BLE"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/twenty_four_dp"
+                                    android:fontFamily="@font/comfortaa_regular"
+                                    android:text="@string/nr_ble"
+                                    android:textColor="@color/black"
+                                    android:textSize="@dimen/fourteen_sp"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <androidx.constraintlayout.widget.ConstraintLayout
+                                    android:id="@+id/btn3"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                                    app:layout_constraintBottom_toBottomOf="@+id/title_NR_BLE"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="@+id/title_NR_BLE">
+
+                                    <EditText
+                                        android:id="@+id/value_nr_ble"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:backgroundTint="@color/white"
+                                        android:fontFamily="@font/comfortaa_regular"
+                                        android:inputType="number"
+                                        android:minLines="1"
+                                        android:paddingHorizontal="@dimen/sixteen_dp"
+                                        android:text="@string/zero"
+                                        android:textColor="@color/black"
+                                        android:textSize="@dimen/fourteen_sp"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@id/decrement_nr_ble"
+                                        app:layout_constraintStart_toEndOf="@id/increment_nr_ble"
+                                        app:layout_constraintTop_toTopOf="parent" />
+
+                                    <ImageButton
+                                        android:id="@+id/increment_nr_ble"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_up_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@+id/value_nr_ble"
+                                        app:layout_constraintStart_toStartOf="parent"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/increment"/>
+
+                                    <ImageButton
+                                        android:id="@+id/decrement_nr_ble"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_down_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toEndOf="parent"
+                                        app:layout_constraintStart_toEndOf="@id/value_nr_ble"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/decrement"/>
+
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/card4"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/twenty_dp"
+                            android:layout_marginTop="@dimen/twenty_dp"
+                            android:background="@color/white"
+                            app:cardElevation="@dimen/ten_dp"
+                            app:layout_constraintTop_toBottomOf="@id/card3">
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@color/white"
+                                android:padding="@dimen/eight_dp">
+
+                                <TextView
+                                    android:id="@+id/title_NR_BLE_GSM"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/twenty_four_dp"
+                                    android:fontFamily="@font/comfortaa_regular"
+                                    android:text="@string/nr_ble_gsm"
+                                    android:textColor="@color/black"
+                                    android:textSize="@dimen/fourteen_sp"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <androidx.constraintlayout.widget.ConstraintLayout
+                                    android:id="@+id/btn4"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                                    app:layout_constraintBottom_toBottomOf="@+id/title_NR_BLE_GSM"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="@+id/title_NR_BLE_GSM">
+
+                                    <EditText
+                                        android:id="@+id/value_nr_ble_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:backgroundTint="@color/white"
+                                        android:fontFamily="@font/comfortaa_regular"
+                                        android:inputType="number"
+                                        android:minLines="1"
+                                        android:paddingHorizontal="@dimen/sixteen_dp"
+                                        android:text="@string/zero"
+                                        android:textColor="@color/black"
+                                        android:textSize="@dimen/fourteen_sp"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@id/decrement_nr_ble_gsm"
+                                        app:layout_constraintStart_toEndOf="@id/increment_nr_ble_gsm"
+                                        app:layout_constraintTop_toTopOf="parent" />
+
+                                    <ImageButton
+                                        android:id="@+id/increment_nr_ble_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_up_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@+id/value_nr_ble_gsm"
+                                        app:layout_constraintStart_toStartOf="parent"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/increment"/>
+
+                                    <ImageButton
+                                        android:id="@+id/decrement_nr_ble_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_down_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toEndOf="parent"
+                                        app:layout_constraintStart_toEndOf="@id/value_nr_ble_gsm"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/decrement"/>
+
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/card6"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/twenty_dp"
+                            android:layout_marginTop="@dimen/twenty_dp"
+                            android:background="@color/white"
+                            app:cardElevation="@dimen/ten_dp"
+                            app:layout_constraintTop_toBottomOf="@id/card4">
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@color/white"
+                                android:padding="@dimen/eight_dp">
+
+                                <TextView
+                                    android:id="@+id/title_QT_BLE"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/twenty_four_dp"
+                                    android:fontFamily="@font/comfortaa_regular"
+                                    android:text="@string/qt_ble"
+                                    android:textColor="@color/black"
+                                    android:textSize="@dimen/fourteen_sp"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <androidx.constraintlayout.widget.ConstraintLayout
+                                    android:id="@+id/btn5"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                                    app:layout_constraintBottom_toBottomOf="@+id/title_QT_BLE"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="@+id/title_QT_BLE">
+
+                                    <EditText
+                                        android:id="@+id/value_qt_ble"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:backgroundTint="@color/white"
+                                        android:fontFamily="@font/comfortaa_regular"
+                                        android:inputType="number"
+                                        android:minLines="1"
+                                        android:paddingHorizontal="@dimen/sixteen_dp"
+                                        android:text="@string/zero"
+                                        android:textColor="@color/black"
+                                        android:textSize="@dimen/fourteen_sp"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@id/decrement_qt_ble"
+                                        app:layout_constraintStart_toEndOf="@id/increment_qt_ble"
+                                        app:layout_constraintTop_toTopOf="parent" />
+
+                                    <ImageButton
+                                        android:id="@+id/increment_qt_ble"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_up_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@+id/value_qt_ble"
+                                        app:layout_constraintStart_toStartOf="parent"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/increment"/>
+
+                                    <ImageButton
+                                        android:id="@+id/decrement_qt_ble"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_down_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toEndOf="parent"
+                                        app:layout_constraintStart_toEndOf="@id/value_qt_ble"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/decrement"/>
+
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/card7"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/twenty_dp"
+                            android:layout_marginTop="@dimen/twenty_dp"
+                            android:background="@color/white"
+                            app:cardElevation="@dimen/ten_dp"
+                            app:layout_constraintTop_toBottomOf="@id/card6">
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@color/white"
+                                android:padding="@dimen/eight_dp">
+
+                                <TextView
+                                    android:id="@+id/title_QT_GSM"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/twenty_four_dp"
+                                    android:fontFamily="@font/comfortaa_regular"
+                                    android:text="@string/qt_gsm"
+                                    android:textColor="@color/black"
+                                    android:textSize="@dimen/fourteen_sp"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <androidx.constraintlayout.widget.ConstraintLayout
+                                    android:id="@+id/btn6"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                                    app:layout_constraintBottom_toBottomOf="@+id/title_QT_GSM"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="@+id/title_QT_GSM">
+
+                                    <EditText
+                                        android:id="@+id/value_qt_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:backgroundTint="@color/white"
+                                        android:fontFamily="@font/comfortaa_regular"
+                                        android:inputType="number"
+                                        android:minLines="1"
+                                        android:paddingHorizontal="@dimen/sixteen_dp"
+                                        android:text="@string/zero"
+                                        android:textColor="@color/black"
+                                        android:textSize="@dimen/fourteen_sp"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@id/decrement_qt_gsm"
+                                        app:layout_constraintStart_toEndOf="@id/increment_qt_gsm"
+                                        app:layout_constraintTop_toTopOf="parent" />
+
+                                    <ImageButton
+                                        android:id="@+id/increment_qt_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_up_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@+id/value_qt_gsm"
+                                        app:layout_constraintStart_toStartOf="parent"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/increment"/>
+
+                                    <ImageButton
+                                        android:id="@+id/decrement_qt_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_down_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toEndOf="parent"
+                                        app:layout_constraintStart_toEndOf="@id/value_qt_gsm"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/decrement"/>
+
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+                        </androidx.cardview.widget.CardView>
+
+                        <androidx.cardview.widget.CardView
+                            android:id="@+id/card8"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginHorizontal="@dimen/twenty_dp"
+                            android:layout_marginTop="@dimen/twenty_dp"
+                            android:background="@color/white"
+                            app:cardElevation="@dimen/ten_dp"
+                            app:layout_constraintTop_toBottomOf="@id/card7">
+
+                            <androidx.constraintlayout.widget.ConstraintLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:background="@color/white"
+                                android:padding="@dimen/eight_dp">
+
+                                <TextView
+                                    android:id="@+id/title_QT_BLE_GSM"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="@dimen/twenty_four_dp"
+                                    android:fontFamily="@font/comfortaa_regular"
+                                    android:text="@string/qt_ble_gsm"
+                                    android:textColor="@color/black"
+                                    android:textSize="@dimen/fourteen_sp"
+                                    app:layout_constraintBottom_toBottomOf="parent"
+                                    app:layout_constraintStart_toStartOf="parent"
+                                    app:layout_constraintTop_toTopOf="parent" />
+
+                                <androidx.constraintlayout.widget.ConstraintLayout
+                                    android:id="@+id/btn7"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                                    app:layout_constraintBottom_toBottomOf="@+id/title_QT_BLE_GSM"
+                                    app:layout_constraintEnd_toEndOf="parent"
+                                    app:layout_constraintTop_toTopOf="@+id/title_QT_BLE_GSM">
+
+                                    <EditText
+                                        android:id="@+id/value_qt_ble_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:backgroundTint="@color/white"
+                                        android:fontFamily="@font/comfortaa_regular"
+                                        android:inputType="number"
+                                        android:minLines="1"
+                                        android:paddingHorizontal="@dimen/sixteen_dp"
+                                        android:text="@string/zero"
+                                        android:textColor="@color/black"
+                                        android:textSize="@dimen/fourteen_sp"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@id/decrement_qt_ble_gsm"
+                                        app:layout_constraintStart_toEndOf="@id/increment_qt_ble_gps"
+                                        app:layout_constraintTop_toTopOf="parent" />
+
+                                    <ImageButton
+                                        android:id="@+id/increment_qt_ble_gps"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_up_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toStartOf="@+id/value_qt_ble_gsm"
+                                        app:layout_constraintStart_toStartOf="parent"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/increment"/>
+
+                                    <ImageButton
+                                        android:id="@+id/decrement_qt_ble_gsm"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="0dp"
+                                        android:background="@color/black"
+                                        android:padding="@dimen/two_dp"
+                                        android:src="@drawable/ic_down_arrow_white"
+                                        app:layout_constraintBottom_toBottomOf="parent"
+                                        app:layout_constraintEnd_toEndOf="parent"
+                                        app:layout_constraintStart_toEndOf="@id/value_qt_ble_gsm"
+                                        app:layout_constraintTop_toTopOf="parent"
+                                        android:contentDescription="@string/decrement"/>
+
+                                </androidx.constraintlayout.widget.ConstraintLayout>
+                            </androidx.constraintlayout.widget.ConstraintLayout>
+                        </androidx.cardview.widget.CardView>
+
+
+                        <Button
+                            android:id="@+id/checkout"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/thirty_two_dp"
+                            android:layout_marginBottom="@dimen/eight_dp"
+                            android:background="@drawable/round_button"
+                            android:fontFamily="@font/comfortaa_regular"
+                            android:paddingStart="@dimen/sixty_four_dp"
+                            android:paddingEnd="@dimen/sixty_four_dp"
+                            android:text="@string/go_to_cart"
+                            android:textAllCaps="false"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/fourteen_sp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/card8" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.cardview.widget.CardView>
+
+                <include layout="@layout/toolbar" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                android:visibility="gone"
+                android:background="@color/white"/>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

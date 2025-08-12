@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+    <group android:checkableBehavior="none"> <!--if it is single then menu items are highlighted after closing the fragment-->
+        <item
+            android:id="@+id/am_live_track"
+            android:title="Live Track" />
+        <item
+            android:id="@+id/am_manage_cycle"
+            android:title="Manage Bicycle" />
+        <item
+            android:id="@+id/am_manage_ads"
+            android:title="Manage Ads" />
+      <!--  <item
+            android:id="@+id/am_user_support"
+            android:title="User Support" />-->
+        <item
+            android:id="@+id/am_contact_zone_manager"
+            android:title="Contact Zone Manager" />
+      <!--  <item
+            android:id="@+id/am_show_report"
+            android:title="Show Report" />-->
+        <item
+            android:id="@+id/am_area_manager_profile"
+            android:title="Profile" />
+        <item
+            android:id="@+id/logout"
+            android:title="Logout" />
+    </group>
+
+</menu>

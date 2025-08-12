@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/add_bicycle"
+        android:title="@string/add_bicycle" />
+    <item
+        android:id="@+id/repair_bicycle"
+        android:title="@string/repair_bicycle" />
+    <item
+        android:id="@+id/remove_bicycle"
+        android:title="@string/remove_bicycle"
+        android:visible="false"/>
+</menu>

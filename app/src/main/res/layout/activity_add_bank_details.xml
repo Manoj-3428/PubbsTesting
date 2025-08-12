@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".AddBankDetails">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/scroll_view"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingBottom="@dimen/sixty_four_dp">
+
+                <TextView
+                    android:id="@+id/add_bank_account_tv"
+                    android:layout_width="match_parent"
+                    style="@style/AppFont"
+                    android:layout_height="50dp"
+                    android:background="@color/black"
+                    android:paddingStart="@dimen/sixteen_dp"
+                    android:paddingEnd="@dimen/sixteen_dp"
+                    android:paddingTop="@dimen/sixteen_dp"
+                    android:paddingBottom="@dimen/eight_dp"
+                    android:text="@string/add_bank_account"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <TextView
+                    android:id="@+id/description"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/add_bank_account_tv"
+                    android:paddingStart="@dimen/sixteen_dp"
+                    android:paddingEnd="@dimen/sixteen_dp"
+                    android:paddingTop="@dimen/eight_dp"
+                    android:paddingBottom="@dimen/eight_dp"
+                    style="@style/AppFont"
+                    android:text="@string/account_description"
+                    android:textColor="@color/colorPrimaryDark"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <TextView
+                    android:id="@+id/upi_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@+id/description"
+                    android:layout_marginStart="@dimen/sixteen_dp"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:layout_marginEnd="@dimen/sixteen_dp"
+                    android:text="@string/upiId"
+                    style="@style/AppFont"
+                    android:textColor="@color/grey_800"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <EditText
+                    android:id="@+id/upi"
+                    style="@style/AppFont"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/upi_layout"
+                    android:layout_margin="@dimen/eight_dp"
+                    android:backgroundTint="@color/colorAccent"
+                    android:paddingLeft="@dimen/ten_dp"
+                    android:paddingRight="@dimen/ten_dp"
+                    android:textColor="@color/colorPrimary"
+                    android:textColorHint="@color/colorAccent"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <TextView
+                    android:id="@+id/phone_number_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@+id/upi"
+                    style="@style/AppFont"
+                    android:layout_marginStart="@dimen/sixteen_dp"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:layout_marginEnd="@dimen/sixteen_dp"
+                    android:text="@string/phone_number"
+                    android:textColor="@color/grey_900"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <EditText
+                    android:id="@+id/phone_number"
+                    style="@style/AppFont"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/phone_number_layout"
+                    android:layout_margin="@dimen/eight_dp"
+                    android:backgroundTint="@color/colorAccent"
+                    android:paddingLeft="@dimen/ten_dp"
+                    android:paddingRight="@dimen/ten_dp"
+                    android:textColor="@color/colorPrimary"
+                    android:textColorHint="@color/colorAccent"
+                    android:textSize="@dimen/fourteen_sp" />
+                
+            </RelativeLayout>
+        </ScrollView>
+    </RelativeLayout>
+
+    <Button
+        android:id="@+id/confirm"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/forty_dp"
+        android:background="@color/grey_500"
+        android:elevation="@dimen/eight_dp"
+        style="@style/AppFont"
+        android:paddingLeft="@dimen/sixty_four_dp"
+        android:paddingTop="@dimen/eight_dp"
+        android:paddingRight="@dimen/sixty_four_dp"
+        android:paddingBottom="@dimen/eight_dp"
+        android:text="@string/confirm"
+        android:textColor="@color/white"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

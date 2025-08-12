@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/custom_background_shape">
+
+    <Button
+        android:id="@+id/proceed"
+        style="@style/AppFont"
+        android:layout_width="@dimen/two_hundred_dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/thirty_six_dp"
+        android:layout_marginBottom="@dimen/thirty_six_dp"
+        android:background="@drawable/round_button"
+        android:text="@string/set_name"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="@dimen/fourteen_sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/radio_group_station" />
+
+    <EditText
+        android:id="@+id/area_name"
+        style="@style/AppFont"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/sixty_four_dp"
+        android:layout_marginStart="@dimen/twenty_four_dp"
+        android:layout_marginTop="@dimen/thirty_six_dp"
+        android:layout_marginEnd="@dimen/twenty_four_dp"
+        android:background="@drawable/edittext_background"
+        android:padding="@dimen/sixteen_dp"
+        android:singleLine="true"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/area_tv" />
+
+    <TextView
+        android:id="@+id/area_tv"
+        style="@style/AppFont"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/sixteen_dp"
+        android:layout_marginTop="@dimen/thirty_six_dp"
+        android:layout_marginEnd="@dimen/sixteen_dp"
+        android:text="@string/area_tv"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="@dimen/sixteen_sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/station_radius_header"
+        style="@style/AppFont"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/sixteen_dp"
+        android:layout_marginTop="@dimen/twelve_dp"
+        android:layout_marginEnd="@dimen/sixteen_dp"
+        android:padding="@dimen/four_dp"
+        android:text="Give the radius of the area"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="@dimen/sixteen_sp"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/area_name" />
+
+    <EditText
+        android:id="@+id/station_radius"
+        style="@style/AppFont"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/sixty_four_dp"
+        android:layout_marginStart="@dimen/twenty_four_dp"
+        android:layout_marginTop="@dimen/thirty_six_dp"
+        android:layout_marginEnd="@dimen/twenty_four_dp"
+        android:background="@drawable/edittext_background"
+        android:inputType="number"
+        android:padding="@dimen/sixteen_dp"
+        android:singleLine="true"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/station_radius_header" />
+
+    <RadioGroup
+        android:id="@+id/radio_group_station"
+        android:layout_width="@dimen/zero_dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/sixteen_dp"
+        android:orientation="horizontal"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="@id/station_radius"
+        app:layout_constraintStart_toStartOf="@id/station_radius"
+        app:layout_constraintTop_toBottomOf="@id/station_radius">
+
+        <RadioButton
+            android:id="@+id/primary_station"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Primary" />
+
+        <RadioButton
+            android:id="@+id/secondary_station"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Secondary" />
+
+        <RadioButton
+            android:id="@+id/na_station"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:checked="true"
+            android:text="Not Assigned" />
+    </RadioGroup>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

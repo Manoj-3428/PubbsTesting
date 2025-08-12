@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:paddingTop="@dimen/sixteen_dp"
+    android:paddingStart="@dimen/eight_dp"
+    android:paddingEnd="@dimen/eight_dp"
+    android:background="@color/white">
+
+    <ImageView
+        android:id="@+id/img_profile"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:src="@drawable/ic_account_circle_black"
+        app:layout_constraintBottom_toBottomOf="@id/mobile_number"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/operator_name"
+        android:contentDescription="@string/user_logo"/>
+
+    <TextView
+        android:id="@+id/operator_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/img_profile"
+        android:layout_marginStart="@dimen/sixteen_dp"
+        android:textSize="@dimen/sixteen_sp"
+        android:fontFamily="@font/comfortaa_regular"
+        android:textColor="@color/black"
+        android:text="Name: "/>
+    <TextView
+        android:id="@+id/key"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/operator_name"
+        app:layout_constraintStart_toEndOf="@id/img_profile"
+        android:layout_marginStart="@dimen/sixteen_dp"
+        android:layout_marginTop="@dimen/eight_dp"
+        android:textSize="@dimen/fourteen_sp"
+        android:fontFamily="@font/comfortaa_regular"
+        android:textColor="@color/grey_600"
+        android:text="Operator Key: "
+        android:visibility="gone"/>
+    <TextView
+        android:id="@+id/mobile_number"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/key"
+        app:layout_constraintStart_toEndOf="@id/img_profile"
+        android:layout_marginStart="@dimen/sixteen_dp"
+        android:layout_marginTop="@dimen/eight_dp"
+        android:textSize="@dimen/fourteen_sp"
+        android:fontFamily="@font/comfortaa_regular"
+        android:textColor="@color/grey_600"
+        android:text="Mobile Number: "/>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/one_dp"
+        android:layout_marginTop="@dimen/twenty_four_dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/mobile_number"
+        android:background="@color/grey_400"
+        android:layout_marginStart="@dimen/twelve_dp"
+        android:layout_marginEnd="@dimen/twelve_dp"/>
+    <Switch
+        android:id="@+id/user_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/operator_name"
+        app:layout_constraintBottom_toBottomOf="@id/mobile_number"
+        android:layout_marginEnd="@dimen/sixteen_dp"
+        android:thumbTint="@color/red_400"
+        android:trackTint="@color/red_300"/>
+</androidx.constraintlayout.widget.ConstraintLayout>

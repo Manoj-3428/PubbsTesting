@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fitsSystemWindows="true"
+    tools:context=".ManageAds">
+
+    <include layout="@layout/toolbar" />
+
+    <EditText
+        android:id="@+id/ads_text"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/zero_dp"
+        android:background="@color/white"
+        android:backgroundTint="@color/white"
+        android:cursorVisible="true"
+        android:focusable="true"
+        android:focusedByDefault="true"
+        android:gravity="center"
+        android:hint="Type your text for the Ads.\nExample: Ride now get 25% off"
+        android:inputType="textMultiLine"
+        android:maxLength="200"
+        android:paddingHorizontal="@dimen/four_dp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/grey_500"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_layout">
+
+        <requestFocus />
+    </EditText>
+
+    <Button
+        android:id="@+id/create_ads"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/eight_dp"
+        android:layout_marginEnd="@dimen/four_dp"
+        android:background="@drawable/round_button"
+        android:text="Send"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:visibility="invisible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_layout" />
+
+    <Button
+        android:id="@+id/color"
+        android:layout_width="@dimen/thirty_six_dp"
+        android:layout_height="@dimen/thirty_six_dp"
+        android:layout_marginStart="@dimen/eight_dp"
+        android:layout_marginBottom="@dimen/eight_dp"
+        android:background="@drawable/ic_paint"
+        android:padding="@dimen/twenty_four_dp"
+        android:textAllCaps="false"
+        android:tooltipText="Change Color"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/textinput_counter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/twenty_four_dp"
+        android:background="@drawable/round_button"
+        android:padding="@dimen/four_dp"
+        android:text=""
+        android:textColor="@color/white"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/color"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/color" />
+</androidx.constraintlayout.widget.ConstraintLayout>

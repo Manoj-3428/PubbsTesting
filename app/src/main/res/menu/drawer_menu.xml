@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+    <group android:checkableBehavior="none"> <!--if it is single then menu items are highlighted after closing the fragment-->
+        <item
+            android:id="@+id/manage_operator"
+            android:title="@string/manage_operator1" />
+        <item
+            android:id="@+id/show_inventor"
+            android:title="Show Inventory" />
+        <item
+            android:id="@+id/show_report"
+            android:title="@string/show_report" />
+        <item
+            android:id="@+id/show_profile"
+            android:title="Profile" />
+        <item
+            android:id="@+id/logout"
+            android:title="Logout" />
+    </group>
+
+</menu>

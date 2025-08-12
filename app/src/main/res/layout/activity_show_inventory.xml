@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/zero_dp"
+        android:fillViewport="true"
+        android:orientation="vertical"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_layout">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/zero_dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <Button
+                android:id="@+id/lock_inventory"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/forty_dp"
+                android:layout_marginBottom="@dimen/twenty_four_dp"
+                android:background="@drawable/round_button"
+                android:fontFamily="@font/comfortaa_regular"
+                android:paddingHorizontal="@dimen/sixty_four_dp"
+                android:text="Add lock to Inventory"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="@dimen/fourteen_sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/container_NR_NB_IOT" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="@dimen/twenty_six_dp"
+                android:background="@color/grey_300"
+                app:layout_constraintTop_toBottomOf="@id/container_AT_BLE" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="@dimen/twenty_six_dp"
+                android:background="@color/grey_300"
+                app:layout_constraintTop_toBottomOf="@id/container_AT_BLE_GSM" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="@dimen/twenty_six_dp"
+                android:background="@color/grey_300"
+                app:layout_constraintTop_toBottomOf="@id/container_NR_BLE" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="@dimen/twenty_six_dp"
+                android:background="@color/grey_300"
+                app:layout_constraintTop_toBottomOf="@id/container_NR_BLE_GSM" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="@dimen/twenty_six_dp"
+                android:background="@color/grey_300"
+                app:layout_constraintTop_toBottomOf="@id/container_QT_BLE" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="@dimen/twenty_six_dp"
+                android:background="@color/grey_300"
+                app:layout_constraintTop_toBottomOf="@id/container_QT_GSM" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="@dimen/twenty_six_dp"
+                android:background="@color/grey_300"
+                app:layout_constraintTop_toBottomOf="@id/container_QT_BLE_GSM" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="@dimen/twenty_six_dp"
+                android:background="@color/grey_300"
+                app:layout_constraintTop_toBottomOf="@id/container_NR_BLE_MSH" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginHorizontal="@dimen/twenty_six_dp"
+                android:background="@color/grey_300"
+                app:layout_constraintTop_toBottomOf="@id/container_NR_NB_IOT" />
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/container_AT_BLE"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/twenty_four_dp"
+                android:padding="@dimen/sixteen_sp"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageButton
+                    android:id="@+id/down_AT_BLE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                    android:background="@color/white"
+                    android:padding="@dimen/eight_dp"
+                    android:src="@drawable/ic_arrow_down_grey"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_AT_BLE"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/title_AT_BLE"
+                    android:contentDescription="@string/more_info"/>
+
+                <TextView
+                    android:id="@+id/title_AT_BLE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/at_ble"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/cart_AT_BLE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/sixty_four_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/in_cart_text"
+                    android:textColor="@color/light_blue_A800"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_AT_BLE"
+                    app:layout_constraintEnd_toStartOf="@+id/down_AT_BLE"
+                    app:layout_constraintTop_toTopOf="@+id/title_AT_BLE" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/container_AT_BLE_GSM"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/twenty_four_dp"
+                android:padding="@dimen/sixteen_sp"
+                app:layout_constraintTop_toBottomOf="@id/container_AT_BLE">
+
+                <ImageButton
+                    android:id="@+id/down_AT_BLE_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                    android:background="@color/white"
+                    android:padding="@dimen/eight_dp"
+                    android:src="@drawable/ic_arrow_down_grey"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_AT_BLE_GSM"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/title_AT_BLE_GSM"
+                    android:contentDescription="@string/more_info"/>
+
+                <TextView
+                    android:id="@+id/title_AT_BLE_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/at_ble_gsm"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/cart_AT_BLE_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/sixty_four_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/in_cart_text"
+                    android:textColor="@color/light_blue_A800"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_AT_BLE_GSM"
+                    app:layout_constraintEnd_toStartOf="@+id/down_AT_BLE_GSM"
+                    app:layout_constraintTop_toTopOf="@+id/title_AT_BLE_GSM" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/container_NR_BLE"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/twenty_four_dp"
+                android:padding="@dimen/sixteen_sp"
+                app:layout_constraintTop_toBottomOf="@id/container_AT_BLE_GSM">
+
+                <ImageButton
+                    android:id="@+id/down_NR_BLE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                    android:background="@color/white"
+                    android:padding="@dimen/eight_dp"
+                    android:src="@drawable/ic_arrow_down_grey"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_NR_BLE"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/title_NR_BLE"
+                    android:contentDescription="@string/more_info"/>
+
+                <TextView
+                    android:id="@+id/title_NR_BLE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/nr_ble"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/cart_NR_BLE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/sixty_four_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/in_cart_text"
+                    android:textColor="@color/light_blue_A800"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_NR_BLE"
+                    app:layout_constraintEnd_toStartOf="@+id/down_NR_BLE"
+                    app:layout_constraintTop_toTopOf="@+id/title_NR_BLE" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/container_NR_BLE_GSM"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/twenty_four_dp"
+                android:padding="@dimen/sixteen_sp"
+                app:layout_constraintTop_toBottomOf="@id/container_NR_BLE">
+
+                <ImageButton
+                    android:id="@+id/down_NR_BLE_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                    android:background="@color/white"
+                    android:padding="@dimen/eight_dp"
+                    android:src="@drawable/ic_arrow_down_grey"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_NR_BLE_GSM"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/title_NR_BLE_GSM"
+                    android:contentDescription="@string/more_info" />
+
+                <TextView
+                    android:id="@+id/title_NR_BLE_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/nr_ble_gsm"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/cart_NR_BLE_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/sixty_four_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/in_cart_text"
+                    android:textColor="@color/light_blue_A800"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_NR_BLE_GSM"
+                    app:layout_constraintEnd_toStartOf="@+id/down_NR_BLE_GSM"
+                    app:layout_constraintTop_toTopOf="@+id/title_NR_BLE_GSM" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/container_QT_BLE"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/twenty_four_dp"
+                android:padding="@dimen/sixteen_sp"
+                app:layout_constraintTop_toBottomOf="@id/container_NR_BLE_GSM">
+
+                <ImageButton
+                    android:id="@+id/down_QT_BLE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                    android:background="@color/white"
+                    android:padding="@dimen/eight_dp"
+                    android:src="@drawable/ic_arrow_down_grey"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_QT_BLE"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/title_QT_BLE"
+                    android:contentDescription="@string/more_info"/>
+
+                <TextView
+                    android:id="@+id/title_QT_BLE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/qt_ble"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/cart_QT_BLE"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/sixty_four_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/in_cart_text"
+                    android:textColor="@color/light_blue_A800"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_QT_BLE"
+                    app:layout_constraintEnd_toStartOf="@+id/down_QT_BLE"
+                    app:layout_constraintTop_toTopOf="@+id/title_QT_BLE" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/container_QT_GSM"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/twenty_four_dp"
+                android:padding="@dimen/sixteen_sp"
+                app:layout_constraintTop_toBottomOf="@id/container_QT_BLE">
+
+                <ImageButton
+                    android:id="@+id/down_QT_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                    android:background="@color/white"
+                    android:padding="@dimen/eight_dp"
+                    android:src="@drawable/ic_arrow_down_grey"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_QT_GSM"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/title_QT_GSM"
+                    android:contentDescription="@string/more_info"/>
+
+                <TextView
+                    android:id="@+id/title_QT_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/qt_gsm"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/cart_QT_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/sixty_four_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/in_cart_text"
+                    android:textColor="@color/light_blue_A800"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_QT_GSM"
+                    app:layout_constraintEnd_toStartOf="@+id/down_QT_GSM"
+                    app:layout_constraintTop_toTopOf="@+id/title_QT_GSM" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/container_QT_BLE_GSM"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/twenty_four_dp"
+                android:padding="@dimen/sixteen_sp"
+                app:layout_constraintTop_toBottomOf="@id/container_QT_GSM">
+
+                <ImageButton
+                    android:id="@+id/down_QT_BLE_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                    android:background="@color/white"
+                    android:padding="@dimen/eight_dp"
+                    android:src="@drawable/ic_arrow_down_grey"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_QT_BLE_GSM"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/title_QT_BLE_GSM"
+                    android:contentDescription="@string/more_info"/>
+
+                <TextView
+                    android:id="@+id/title_QT_BLE_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/qt_ble_gsm"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/cart_QT_BLE_GSM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/sixty_four_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/in_cart_text"
+                    android:textColor="@color/light_blue_A800"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_QT_BLE_GSM"
+                    app:layout_constraintEnd_toStartOf="@+id/down_QT_BLE_GSM"
+                    app:layout_constraintTop_toTopOf="@+id/title_QT_BLE_GSM" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/container_NR_BLE_MSH"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/twenty_four_dp"
+                android:padding="@dimen/sixteen_sp"
+                app:layout_constraintTop_toBottomOf="@id/container_QT_BLE_GSM">
+
+                <ImageButton
+                    android:id="@+id/down_NR_BLE_MSH"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                    android:background="@color/white"
+                    android:padding="@dimen/eight_dp"
+                    android:src="@drawable/ic_arrow_down_grey"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_NR_BLE_MSH"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/title_NR_BLE_MSH"
+                    android:contentDescription="@string/more_info"/>
+
+                <TextView
+                    android:id="@+id/title_NR_BLE_MSH"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/nr_ble_msh"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/cart_NR_BLE_MSH"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/sixty_four_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/in_cart_text"
+                    android:textColor="@color/light_blue_A800"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_NR_BLE_MSH"
+                    app:layout_constraintEnd_toStartOf="@+id/down_NR_BLE_MSH"
+                    app:layout_constraintTop_toTopOf="@+id/title_NR_BLE_MSH" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/container_NR_NB_IOT"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/twenty_four_dp"
+                android:padding="@dimen/sixteen_sp"
+                app:layout_constraintTop_toBottomOf="@id/container_NR_BLE_MSH">
+
+                <ImageButton
+                    android:id="@+id/down_NR_NB_IOT"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/thirty_two_dp"
+                    android:background="@color/white"
+                    android:padding="@dimen/eight_dp"
+                    android:src="@drawable/ic_arrow_down_grey"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_NR_NB_IOT"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/title_NR_NB_IOT"
+                    android:contentDescription="@string/more_info"/>
+
+                <TextView
+                    android:id="@+id/title_NR_NB_IOT"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/nr_nb_iot"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/cart_NR_NB_IOT"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/sixty_four_dp"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:text="@string/in_cart_text"
+                    android:textColor="@color/light_blue_A800"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintBottom_toBottomOf="@+id/title_NR_NB_IOT"
+                    app:layout_constraintEnd_toStartOf="@+id/down_NR_NB_IOT"
+                    app:layout_constraintTop_toTopOf="@+id/title_NR_NB_IOT" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+
+    <include layout="@layout/toolbar" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

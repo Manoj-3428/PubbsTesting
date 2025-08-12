@@ -1,0 +1,307 @@
+<resources>
+    <string name="app_name">PubbsAdminApp</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
+    <string name="credential">Credentials</string>
+    <string name="mobile_no">Mobile number</string>
+    <string name="logout">Logout</string>
+
+    <string name="open">Open</string>
+    <string name="close">Close</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="pubbs">PUBBS</string>
+    <string name="sharedPreferences">pubbs</string>
+    <string name="manage_operator">Manage Operator</string>
+    <string name="add_operator">Add Operator</string>
+    <string name="organisation">Organisation</string>
+    <string name="full_name">Full Name of the Owner</string>
+    <string name="email">Email ID</string>
+    <string name="city">City</string>
+    <string name="details">Details of new Operator</string>
+    <string name="details_zone_manager">Details of new Zone Manager</string>
+    <string name="password_tv">Enter your authorisation password to create the new operator</string>
+    <string name="password_tv_zone_manager">Enter your authorisation password to create the new Zone Manager</string>
+    <string name="help_one">Pressing Confirm will create the new operator and will send a confirmation Email to the given Email-ID</string>
+    <string name="authorized_password">Authorization Password</string>
+    <string name="confirm">Confirm</string>
+    <string name="new_operator_added">New Operator Added!</string>
+    <string name="new_zone_manager_added">New Zone Manager Added!</string>
+    <string name="done">Done</string>
+    <string name="title_text">Title Text</string>
+    <string name="organisation_name">Organisation Name</string>
+    <string name="email_id">Email ID</string>
+    <string name="phone">Phone</string>
+    <string name="choose_lock_type">Choose Lock type:</string>
+    <string name="view_cart">View Cart</string>
+    <string name="checkout">Checkout</string>
+    <string name="in_cart_text">In Cart :</string>
+    <string name="in_stock_text">In Stock :</string>
+    <string name="qt_ble">QT_BLE</string>
+    <string name="qt_sms">QT_SMS</string>
+    <string name="nr_ble_sms">NR_BLE_SMS</string>
+    <string name="qt_ble_gsm">QT_BLE_GSM</string>
+    <string name="at_ble">AT_BLE</string>
+    <string name="zero">0</string>
+    <string name="operator_name">Operator Details</string>
+    <string name="assign_lock">Assign Locks</string>
+    <string name="employee_id">Employee ID</string>
+    <string name="zone_manager_name_txt">Name of the Zone Manager</string>
+    <string name="empty_field_message">Field cannot be left empty</string>
+    <string name="sell_lock">Sell Locks</string>
+    <string name="add_zone_manager">Add Zone Manager</string>
+    <string name="add_area">Add Area</string>
+    <string name="proceed">Proceed</string>
+    <string name="add_new_area_message">
+        \u2192 Admin can choose area by typing the location in the Search Bar.\n\n
+        \u2192 Twelve coordinates/points should be chosen in the map to create the polygon.\n\n
+        \u2192 A name of the Polygonal Area should be given.\n\n
+        \u2192 Admin can proceed to the next screen by clicking OK.\n\n
+        \u2192 The Time slabs should be set with the price for Rate Chart.\n\n
+        \u2192 To proceed click OK Button.\n\n
+        \u2192 He/She should create the Final Area by setting\n\n
+            \t\t(1) Maximum Ride Time \n\n
+            \t\t(2) Maximum Cycle Holding Time\n\n
+            \t\t(3) Minimum Amount of Money Present in Online Wallet\n\n
+            \t\t(4) Opening Hour\n\n
+            \t\t(5) Closing Hour \n\n
+            \t\t(6) Geo-fencing Fine\n\n
+        \u2192 Admin should hit the Proceed Button to add the area to the Server.</string>
+    <string name="add_area_tv">To Add New Area</string>
+    <string name="select_area_description">How do you select your location ?</string>
+    <string name="area">Select your area now.</string>
+    <string name="area_tv">Give name to the selected area</string>
+    <string name="set_name">Set Name</string>
+    <string name="area_name">Area Name</string>
+    <string name="maximum_ride_time">Maximum Ride Time</string>
+    <string name="maximum_ride_time_exceeding_fine">Maximum Ride Time\n exceeding fine</string>
+    <string name="maximum_hold_time">Maximum Hold Time</string>
+    <string name="maximum_hold_time_exceeding_fine">Maximum Hold\n Time exceeding \nfine</string>
+    <string name="minimum_amount_for_first_ride">Minimum Amount\n for First Ride</string>
+    <string name="set_basic_value_for_rate_chart">Set Basic value for \nrate chart \n(rupees/min)</string>
+    <string name="service_start_time">Service Start time</string>
+    <string name="service_end_time">Service End time</string>
+    <string name="service_hour_exceeding_fine">Set Service hour\n exceeding fine</string>
+    <string name="geofencing_fine">Geofencing Fine</string>
+    <string name="customer_support_number">Customer \nSupport number</string>
+    <string name="area_legal">Add Area Legal</string>
+    <string name="add_bicycle">Add Bicycle</string>
+    <string name="repair_bicycle">Repair Bicycle</string>
+    <string name="remove_bicycle">Remove Bicycle</string>
+    <string name="enter_new_name">Enter new name</string>
+    <string name="enter_new_password">Enter new password</string>
+    <string name="description">Description</string>
+    <string name="area_subscription">Add Area Subscription</string>
+    <string name="add_station">Add Stations</string>
+    <string name="add_rate_chart">Add Rate Chart</string>
+    <string name="set_condition">Set conditions to your Selected Area</string>
+    <string name="select_area_legal">How to add new Area Legal?</string>
+    <string name="select_area_legal_subtitle">To Add Area Legal</string>
+    <string name="select_area_legal_desc">
+        \u2192 Set the condition to create the Virtual Geographical Boundaries for
+        Step 1.\n\n\u2192 Set the Base Fare conditions (Base fare is important to start the ride)
+        for Step 2.\n\n\u2192 Set the Service Condition i.e. Opening/Closing hours and other necessary conditions
+        for Step 3.\n\n\u2192 Set Subscriber condition for Step 4.\n\n\u2192 Lastly add any more required conditions for area briefly in Step 5.\n\nFinally the Sub-Admin can add the Area Legal.</string>
+    <string name="area_legal_bottomLine">Add new Area Legal now.</string>
+    <string name="set_area_legal">Set your Area Legal</string>
+    <string name="geofencing_condition">Step 1: Geofencing Conditions</string>
+    <string name="baseFare_condition">Step 2: Base Fare Conditions</string>
+    <string name="service_area_condition">Step 3: Service Area Conditions</string>
+    <string name="area_subscription_condition">Step 4: Area subscription condition</string>
+    <string name="additional_area_condition">Step 5: Additional area conditions</string>
+    <string name="add_subscription">Add Subscription Plan</string>
+    <string name="set_condition_subscription">Set conditions to your Subscription Plan</string>
+    <string name="set_total_ride_time">Set total Ride Time</string>
+    <string name="carry_forward">Do you want to make this plan as Carry Forward</string>
+    <string name="add_plan">Add Plan</string>
+    <string name="subscription_help">How do you set Subscription for an Area ?</string>
+    <string name="subscription_help_subtitle">To set Subscription for an Area</string>
+    <string name="subscription_message">
+         To create subscription plan user has to add,\n\n
+        (1) Amount for Subscription.\n\n
+        (2) Time Period of Subscription\n\n
+        (3) If unit of time gets added to user\'s ride after Subscription.\n\n
+        User has to enter all four- Basic, Standard, Sweet, Premium subscription plan details and proceed further.
+    </string>
+    <string name="subscribe">Add subscription plans now.</string>
+    <string name="add_station_">Add Station</string>
+    <string name="add_station_help">How to add a station inside an area?</string>
+    <string name="add_station_header">To Add a New Station</string>
+    <string name="adding_station_help">
+        \u2192 Admin can plot a single coordinate inside the chosen Polygonal Area.
+        \n\n\u2192 A dialog will pop-up in the screen. Admin has to give a name of the station.
+        \n\n\u2192 After pressing OK Button the station details will be saved in the server.</string>
+    <string name="select_station">Select your station now.</string>
+    <string name="area_rate_chart_header">How do you add rate chart for your selected area?</string>
+    <string name="area_rate_chart_header_subtitle">To Add Rate Chart for Selected Area</string>
+    <string name="description_add_rate">
+        \u2192 To add a Rate Chart the Sub-Admin has to select the type of rate from the drop-down menu\n\n
+        \u2192 The drop-down menu contains two options,\n\n
+        (1)	TIME\n\n
+        (2)	DISTANCE\n\n
+        \u2192 The Sub-Admin is required to set the Time Slab in minutes and hours, with respect to price per time option. For the distance option distance should be in meters and price should be selected.\n\n
+        \u2192 For the next step the Sub-Admin need to select the Type(s) of Rate he will accept as Payment, i.e. according to Time, Distance or Both from the Option Button.\n\n
+        \u2192 On choosing one from the option menu, Sub-Admin can set the Basis of Rate Chart, so that the user will be charged money accordingly.</string>
+    <string name="rate_now">Add Rate for the area.</string>
+    <string name="set_condition_rate_chart">Set your Rate Chart</string>
+    <string name="add_rate">Add Rate</string>
+    <string name="area_legal_">Area Legal</string>
+    <string name="area_subscription_">Area Subscription</string>
+    <string name="station">Stations</string>
+    <string name="rate_chart">Rate Chart</string>
+    <string name="user_message_list">Report Problems</string>
+    <string name="reply">REPLY</string>
+    <string name="station_name">Station Name</string>
+    <string name="station_type">Station Type</string>
+    <string name="at_ble_gsm">AT_BLE_GSM</string>
+    <string name="nr_ble">NR_BLE</string>
+    <string name="nr_ble_gsm">NR_BLE_GSM</string>
+    <string name="qt_gsm">QT_GSM</string>
+    <string name="nr_ble_msh">NR_BLE_MSH</string>
+    <string name="nr_nb_iot">NR_NB_IOT</string>
+    <string name="add_bank">Add Bank</string>
+    <string name="add_bank_account">Add Bank Account</string>
+    <string name="account_description">You can send money to your contact using their UPI ID and mobile number.</string>
+    <string name="subscription">Subscription</string>
+    <string name="subscription_name">Subscription Name</string>
+    <string name="cycle_low_battery">Bicycle Low Battery</string>
+    <string name="reported_cycles">Reported Bicycle</string>
+    <string name="all_bicycles">All Bicycles</string>
+    <string name="google_maps_key">AIzaSyBN7g6pF8Vb57xZF6n3HvVwBkK8iBAKFpU</string>
+    <string name="tutorial_1_title">Locate an Area</string>
+    <string name="tutorial_1_desc">Add twelve points to create a PUBBS area inside the map.</string>
+    <string name="tutorial_2_title">Add new Station</string>
+    <string name="tutorial_2_desc">Choose a coordinate inside the area to create a station where PUBBS users can park bicycles.</string>
+    <string name="tutorial_3_title">Add Bicycle</string>
+    <string name="tutorial_3_desc">Add a new bicycle in the station of an area for PUBBS users to hire bicycle.</string>
+    <string name="start">Start</string>
+    <string name="next">Next</string>
+    <string name="qr_instruction">Place the code in the centre of the square. It will be scanned automatically</string>
+    <string name="turn_on">Turn On</string>
+    <string name="cancel">Cancel</string>
+    <string name="bluetooth_permission">PUBBS is asking\n to turn on Bluetooth</string>
+    <string name="reconnect">Do you want to connect to check battery status of lock ?</string>
+    <string name="search">Search</string>
+    <string name="upiId">UPI ID</string>
+    <string name="phone_number">Phone number</string>
+    <string name="enter_code_manually">Enter code manually</string>
+    <string name="scan_tip">Place the code in the centre of the square. It will be scanned automatically</string>
+    <string name="enter_lock_id">Enter Lock ID</string>
+    <string name="bluetooth_address">Enter Bluetooth Address</string>
+    <string name="enter_sim_number">Enter Sim Number</string>
+    <string name="add_lock">Add Lock</string>
+    <string name="name_of_owner">Name of the Owner</string>
+    <string name="mobile_no_">Mobile no.</string>
+    <string name="operator_key">Operator Key</string>
+    <string name="zone_manager_city">Zone Manager City</string>
+    <string name="zone_manager_key">Zone Manager Key</string>
+    <string name="minutes">Minutes</string>
+    <string name="rupees">Rupees</string>
+    <string name="phone_no">Phone no</string>
+    <string name="plan_name">Plan name</string>
+    <string name="price_plan">Price of the Plan</string>
+    <string name="validity_time">Validity Time</string>
+    <string name="max_ride">Max no. of Free rides</string>
+    <string name="hours">Hours</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="no_data">No data found!</string>
+    <string name="write_msg_zm">Write message to Zone Manager</string>
+    <string name="subject">Subject</string>
+    <string name="msg">Message</string>
+    <string name="send">Send</string>
+    <string name="bicycle_location">Bicycle Location</string>
+    <string name="damaged_bicycle">Damaged cycle</string>
+    <string name="about_us">Welcome to PUBBS, your first source for different types of intelligent locks for bicycles in India.
+        We are dedicated to providing you with the best public bicycle sharing, concentrating on Hardware Communication, Mobile Management System,
+        and Smart Lock Mechanisms. Pubbs is a technology platform for innovative bicycle-sharing to address this last mile problem. It helps people to cover a
+        short distance at very negligible costs without waiting. Our dream is to overcome micro-mobility with their bicycle sharing app for the billions of Indians. \n\n\n
+        The PUBBS, headed by Professor Debapratim Pandit of  Indian Institute of Technology, Kharagpur, Architecture and Regional Planning, has come a long way since the start
+        of its venture. As Mr. Pandit began first, his enthusiasm for greater urban mobility led his team to build this lock that can be used by anyone without any special
+        modifications or instructions in order to provide PUBBS with an unforgettable ride. We now serve customers across the country and look forward to transforming our passion
+        into our own webpage. We hope you are as happy to offer our products to your customers. Please feel free to contact us if you have any questions or comments. \n\n\n
+        We believe in building healthier neighbourhoods that are less congested. Not only is cycling an excellent form of exercise, in some of the most congested cities in the world,
+        it is likely to get you quicker. Together, we will create a positive shift in the urban landscape of our city by reducing congestion.
+    </string>
+    <string name="website_url"> Website Details : https://pubbs.in</string>
+    <string name="login_now">Please login to the application</string>
+    <string name="login_faq">Login FAQs</string>
+    <string name="login_faq_one">How do an operator login to the system ?</string>
+    <string name="login_faq_one_ans">Any level of administrators of Operator/Company should have a particular credential or identification number. Login credentials and password will be sent as
+        an sms to the administrator to the particular phone number. Please check your inbox to get the credential details. The login credential be like : Operator Name/Admin level id/Phone Number.</string>
+    <string name="login_faq_two">Who will create these credentials ?</string>
+    <string name="login_faq_two_ans">Regional Manager(RM) creates and generates identification number and password for Zone Manager(ZM). Zone Manager(ZM) creates and generates identification number
+    and password for Area Manager(AM) and Service Manager(SM). Please contact for your credentials to your previous higher level authority.</string>
+    <string name="faq_three">What do mean by RM, ZM, AM and SM ?</string>
+    <string name="faq_three_ans">Anyone can start Public Bicycle Sharing System business. A company or operator can start the business after buying the bluetooth locks from IIT Kharagpur. An operator or company
+    has four hierarchical levels, they are: Regional Manager (RM), Zone Manager (ZM), Area Manager (AM), Service Manager (SM). To distribute the responsibilities Regional Manager creates Zone Manager and Zone Manager
+    creates Area Manager and Service Manager.</string>
+    <string name="faq_four">What is the pre-defined hierarchical structure of the organisation ?</string>
+    <string name="faq_four_ans">IIT Kharagpur has started Public Bicycle Sharing System. This bicycle sharing system can be used as a small business by anyone with low investment. IIT Kharagpur is referred as
+    PUBBS or Super Admin. Anyone, who is interested in bicycle sharing system, will be considered as an Operator. The head of the Operator is known as Regional Manager (RM). It will be very difficult for the
+        regional manager to monitor if there are more than one areas where bicycle sharing system run. To reduce the work load, Regional Manager(RM) creates Zone Manager(ZM) and give responsibility to
+        manage the area as well as bicycle sharing system. To divide this maintenance work load and to spread the business chain, ZM has an option to create Area Manager(AM) and Service Manager(SM).
+        ZM adds next level of manager by choosing from the list of areas present in that zone. There may be a point, where the ZM holds back the responsibility from the Area Manager(AM) and
+        Service Manager(SM) by deactivating the authority of them.</string>
+    <string name="faq_five">What is Zone ? </string>
+    <string name="faq_five_ans">A zone is a geographical land having some particular purposes and some restrictions. In this context a city can be considered as a zone where an operator
+        can have multiple areas for bicycle sharing system.</string>
+    <string name="faq_six">How to create an area ?</string>
+    <string name="faq_six_ans">Zone Manager can choose create an area by choosing twelve coordinates/points should be chosen in the map to create the polygon. The area requires some restrictions to follow and run the bicycle sharing system.
+       Zone Manager has to set :\n
+            \t\t(1) Maximum Ride Time \n\n
+            \t\t(2) Maximum Cycle Holding Time\n\n
+            \t\t(3) Opening Hour\n\n
+            \t\t(4) Closing Hour \n\n</string>
+    <string name="faq_seven">How to create a station inside the area ?</string>
+    <string name="faq_seven_ans">A twelve points enclosed place is defined as PUBBS area in this case. Zone Manager has to add a station inside the area, where the bicycle users can park the bicycles after the ride.
+    To create a station, Zone Manager has to select a point inside the area in the map. This point is considered as station. There are two types of stations, like : Primary Station, Secondary Station. Both have its own
+    significances. </string>
+    <string name="faq_eight">How the payment structure is imposed after ride complete ? </string>
+    <string name="faq_eight_ans">The organisation contains four hierarchical levels. In business context, a small investment can improve a newly launched system and helps in maintenance of that system.
+        The bicycle user has to pay a small amount of money to the operator in which the user is registered in to use the bicycle sharing system. Zone Manager creates a monthly or daily or weekly basis plan that
+        offers few free rides. This is known as subscription plan. User has to buy a subscription to avail the bicycle ride. Regional Manager is the head of the organisation. Regional Manager
+        shares his/her bank UPI ID. All the money transactions of subscription plan occur between the user and the Regional Manager via any payment application present in the user device.
+    </string>
+    <string name="faq_nine">How to configure the penalties if any violation occurs ? </string>
+    <string name="faq_nine_ans">All the bicycles should be parked inside the station. This bicycle sharing system runs within a stipulated time set by the Zone Manager during area creation. This time is called
+    Service Hour. It starts in morning and ends at night.(This time may vary according to the Zone Manager). If the user does not return the bicycle to the station and it exceeds the service hour then user has
+    pay service hour exceeding fine. All the bicycles need to park in the station and this calls for geo-fencing check. If an user goes out of the station as well as area then user has to pay geo-fencing fine for that.
+    An user can ride a bicycle for a particular amount of time and after that user has to return the bicycle to the station so that another user can take the ride of the bicycle. If the user exceeds the maximum
+    stipulated ride time then user has to pay maximum ride time exceeding fine for that. User can finish a little work in between the ride without ending it. A Hold feature is introduced in this. User can hold the bicycle for
+    a stipulated amount of time and then again resume the ride. If user exceeds the limit of hold ride then an amount of money will be charged as a penalty. All these monetary penalties will be deducted from the subscription plan amount
+        and reduces the total amount of subscription plan.</string>
+    <string name="go_to_cart">Go to Cart</string>
+    <string name="status">Status</string>
+    <string name="bicycle_on_hold">Bicycle on Hold</string>
+    <string name="force_stop">Force Stop</string>
+    <string name="gps_network_not_enabled">Location Error</string>
+    <string name="open_location_settings">Please enable GPS location</string>
+    <string name="report_problem_details">Report Problem Details</string>
+    <string name="iit_kgp_logo">IIT KGP Logo</string>
+    <string name="help">help</string>
+    <string name="back_button">back button</string>
+    <string name="bicycle_icon">bicycle icon</string>
+    <string name="lock_icon">lock icon</string>
+    <string name="company_logo">Company Logo</string>
+    <string name="more_info">for more information click.</string>
+    <string name="user_logo">User Logo</string>
+    <string name="letter_icon">letter icon</string>
+    <string name="add_button">add button</string>
+    <string name="flash_button">Flash</string>
+    <string name="menu">menu</string>
+    <string name="drop_down">drop down</string>
+    <string name="correct_button">Correct Button</string>
+    <string name="bluetooth_icon">bluetooth icon</string>
+    <string name="wallet">wallet</string>
+    <string name="show_map">show map</string>
+    <string name="exclamation_button">exclamation</string>
+    <string name="increment">increment</string>
+    <string name="decrement">decrement</string>
+    <string name="edit">Edit</string>
+    <string name="create_new_ad">Create new ad</string>
+    <string name="enter_time_gap_to_track_bicycle">Time gap to \n track bicycle</string>
+    <string name="show_report">Show Report</string>
+    <string name="manage_operator1">Manage Operator</string>
+</resources>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/custom_background_shape">
+
+    <ImageView
+        android:id="@+id/area_img"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginTop="@dimen/fifty_dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@drawable/ic_wallet"
+        android:contentDescription="@string/wallet"/>
+
+    <TextView
+        android:id="@+id/area_add_tv"
+        style="@style/AppFont"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/eight_dp"
+        android:padding="@dimen/four_dp"
+        android:text="Area is added !"
+        android:textColor="@color/color_black_01"
+        android:textSize="@dimen/fourteen_sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/area_img" />
+
+    <Button
+        android:id="@+id/ok_btn"
+        style="@style/AppFont"
+        android:layout_width="@dimen/two_hundred_dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/twenty_four_dp"
+        android:layout_marginBottom="@dimen/thirty_six_dp"
+        android:background="@drawable/round_button"
+        android:elevation="@dimen/four_dp"
+        android:text="Ok"
+        android:textColor="@color/white"
+        android:textSize="@dimen/fourteen_sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/area_add_tv" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

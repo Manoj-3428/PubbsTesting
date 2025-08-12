@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="10dp"
+    >
+
+    <ImageView
+        android:layout_width="40dp"
+        android:layout_height="70dp"
+        android:src="@drawable/ic_message"
+        android:id="@+id/iv_bike"
+        android:contentDescription="@string/letter_icon"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_toEndOf="@+id/iv_bike"
+        android:layout_marginStart="50dp"
+        android:fontFamily="@font/comfortaa_regular"
+        android:textColor="@color/black"
+        android:textSize="14sp"
+        android:text="user Id"
+        android:textAllCaps="true"
+        android:gravity="center_vertical"
+        android:id="@+id/tv_lock_id"
+        />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="30dp"
+        android:layout_toEndOf="@+id/iv_bike"
+        android:layout_marginStart="50dp"
+        android:fontFamily="@font/comfortaa_regular"
+        android:textColor="@color/black"
+        android:textSize="12sp"
+        android:text="Date and Time:"
+        android:gravity="center_vertical"
+        android:layout_below="@+id/tv_lock_id"
+        android:layout_marginTop="5dp"
+        android:id="@+id/battery_hint"
+        />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="30dp"
+        android:layout_marginStart="40dp"
+        android:fontFamily="@font/comfortaa_regular"
+        android:textColor="@color/cyan_400"
+        android:textSize="12sp"
+        android:text="Date and Time"
+        android:gravity="center_vertical"
+        android:layout_below="@+id/tv_lock_id"
+        android:layout_marginTop="5dp"
+        android:layout_toEndOf="@+id/battery_hint"
+        />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/black"
+        android:layout_below="@+id/iv_bike"
+        android:layout_marginTop="5dp"
+        />
+
+</RelativeLayout>

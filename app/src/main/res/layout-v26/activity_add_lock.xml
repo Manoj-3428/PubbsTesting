@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white">
+
+    <include layout="@layout/toolbar" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/zero_dp"
+        android:fillViewport="true"
+        android:orientation="vertical"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_layout">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/zero_dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/toolbar_layout">
+
+            <RadioGroup
+                android:id="@+id/option_group"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/forty_eight_dp"
+                android:layout_marginTop="@dimen/twenty_four_dp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/sub_title">
+
+                <RadioButton
+                    android:id="@+id/option_at_ble"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/grey_600"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:paddingStart="@dimen/twelve_dp"
+                    android:text="@string/at_ble"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <RadioButton
+                    android:id="@+id/option_at_ble_gsm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:buttonTint="@color/grey_600"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:paddingStart="@dimen/twelve_dp"
+                    android:text="@string/at_ble_gsm"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <RadioButton
+                    android:id="@+id/option_nr_ble"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:buttonTint="@color/grey_600"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:paddingStart="@dimen/twelve_dp"
+                    android:text="@string/nr_ble"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <RadioButton
+                    android:id="@+id/option_nr_ble_gsm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:buttonTint="@color/grey_600"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:paddingStart="@dimen/twelve_dp"
+                    android:text="@string/nr_ble_gsm"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <RadioButton
+                    android:id="@+id/option_qt_ble"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:buttonTint="@color/grey_600"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:paddingStart="@dimen/twelve_dp"
+                    android:text="@string/qt_ble"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <RadioButton
+                    android:id="@+id/option_qt_ble_gsm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:buttonTint="@color/grey_600"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:paddingStart="@dimen/twelve_dp"
+                    android:text="@string/qt_ble_gsm"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <RadioButton
+                    android:id="@+id/option_qt_gsm"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:buttonTint="@color/grey_600"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:paddingStart="@dimen/twelve_dp"
+                    android:text="@string/qt_gsm"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <RadioButton
+                    android:id="@+id/option_nr_ble_msh"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:buttonTint="@color/grey_600"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:paddingStart="@dimen/twelve_dp"
+                    android:text="@string/nr_ble_msh"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp" />
+
+                <RadioButton
+                    android:id="@+id/option_nr_nb_iot"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:buttonTint="@color/grey_600"
+                    android:fontFamily="@font/comfortaa_regular"
+                    android:paddingStart="@dimen/twelve_dp"
+                    android:text="@string/nr_nb_iot"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp" />
+
+            </RadioGroup>
+
+            <TextView
+                android:id="@+id/sub_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/forty_eight_dp"
+                android:layout_marginTop="@dimen/fifty_four_dp"
+                android:fontFamily="@font/comfortaa_regular"
+                android:text="@string/choose_lock_type"
+                android:textColor="@color/black"
+                android:textSize="@dimen/sixteen_sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <EditText
+                android:id="@+id/lock_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/forty_eight_dp"
+                android:layout_marginTop="@dimen/forty_eight_dp"
+                android:backgroundTint="@color/grey_600"
+                android:fontFamily="@font/comfortaa_regular"
+                android:hint="Enter Lock ID"
+                android:inputType="text"
+                android:paddingStart="@dimen/eight_dp"
+                android:paddingBottom="@dimen/twenty_dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/black"
+                android:textSize="@dimen/fourteen_sp"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/option_group" />
+
+            <EditText
+                android:id="@+id/ble_address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/forty_eight_dp"
+                android:layout_marginTop="@dimen/twelve_dp"
+                android:backgroundTint="@color/grey_600"
+                android:fontFamily="@font/comfortaa_regular"
+                android:hint="Enter Bluetooth Address"
+                android:inputType="text"
+                android:paddingStart="@dimen/eight_dp"
+                android:focusable="false"
+                android:paddingBottom="@dimen/twenty_dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/black"
+                android:textSize="@dimen/fourteen_sp"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/lock_id" />
+
+            <EditText
+                android:id="@+id/sim_number"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/forty_eight_dp"
+                android:layout_marginTop="@dimen/twelve_dp"
+                android:backgroundTint="@color/grey_600"
+                android:fontFamily="@font/comfortaa_regular"
+                android:hint="Enter Sim Number"
+                android:inputType="phone"
+                android:paddingStart="@dimen/eight_dp"
+                android:paddingBottom="@dimen/twenty_dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/black"
+                android:textSize="@dimen/fourteen_sp"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/ble_address" />
+
+            <EditText
+                android:id="@+id/battery_data"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/forty_eight_dp"
+                android:layout_marginTop="@dimen/twelve_dp"
+                android:backgroundTint="@color/grey_600"
+                android:fontFamily="@font/comfortaa_regular"
+                android:inputType="phone"
+                android:paddingStart="@dimen/eight_dp"
+                android:paddingBottom="@dimen/twenty_dp"
+                android:textColor="@color/black"
+                android:textColorHint="@color/black"
+                android:textSize="@dimen/fourteen_sp"
+                android:visibility="gone"
+                android:focusable="false"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/sim_number" />
+
+            <Button
+                android:id="@+id/add_lock"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/forty_dp"
+                android:layout_marginBottom="@dimen/twenty_four_dp"
+                android:background="@drawable/round_button"
+                android:fontFamily="@font/comfortaa_regular"
+                android:paddingHorizontal="@dimen/sixty_four_dp"
+                android:text="Add Lock"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="@dimen/fourteen_sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/battery_data" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RateChart">
+
+    <FrameLayout
+        android:id="@+id/manage_system_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/sixty_four_dp"
+                android:background="@color/white">
+
+                <Button
+                    android:id="@+id/add_rate"
+                    style="@style/AppFont"
+                    android:layout_width="@dimen/two_hundred_dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/twenty_four_dp"
+                    android:background="@drawable/round_button"
+                    android:text="@string/add_rate"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/sixteen_sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/layout_minute_slab" />
+
+                <EditText
+                    android:id="@+id/money"
+                    style="@style/AppFont"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:layout_marginEnd="@dimen/thirty_six_dp"
+                    android:background="@drawable/edittext_background"
+                    android:hint="Enter Money in Rupees"
+                    android:inputType="number"
+                    android:padding="@dimen/eight_dp"
+                    android:singleLine="true"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/area_rate_chart_tv" />
+
+                <TextView
+                    android:id="@+id/set_total_ride_time_tv"
+                    style="@style/AppFont"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/twenty_four_dp"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:layout_marginEnd="@dimen/twenty_four_dp"
+                    android:padding="@dimen/four_dp"
+                    android:text="@string/set_total_ride_time"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/money" />
+
+                <TextView
+                    android:id="@+id/hour_slab"
+                    style="@style/AppFont"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/eighty_dp"
+                    android:layout_marginTop="@dimen/forty_dp"
+                    android:text="Hours"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/set_total_ride_time_tv" />
+
+                <TextView
+                    android:id="@+id/minute_slab"
+                    style="@style/AppFont"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/eighty_dp"
+                    android:layout_marginTop="@dimen/forty_dp"
+                    android:text="Minutes"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/hour_slab" />
+
+                <TextView
+                    android:id="@+id/area_rate_chart_tv"
+                    style="@style/AppFont"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/twenty_four_dp"
+                    android:layout_marginTop="@dimen/sixteen_dp"
+                    android:layout_marginEnd="@dimen/twenty_four_dp"
+                    android:drawableEnd="@drawable/ic_help_outline"
+                    android:padding="@dimen/four_dp"
+                    android:text="@string/set_condition_rate_chart"
+                    android:textColor="@color/black"
+                    android:textSize="@dimen/fourteen_sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_minute_slab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/twenty_four_dp"
+                    android:layout_marginEnd="@dimen/forty_dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/layout_hour_slab">
+
+                    <EditText
+                        android:id="@+id/value_minute_slab"
+                        style="@style/AppFont"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@color/white"
+                        android:inputType="number"
+                        android:paddingHorizontal="@dimen/sixteen_dp"
+                        android:text="@string/zero"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/fourteen_sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/decrement_minute_slab"
+                        app:layout_constraintStart_toEndOf="@id/increment_minute_slab"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <ImageButton
+                        android:id="@+id/increment_minute_slab"
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:background="@color/black"
+                        android:padding="@dimen/two_dp"
+                        android:src="@drawable/ic_up_arrow_white"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/value_minute_slab"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:contentDescription="@string/increment"/>
+
+                    <ImageButton
+                        android:id="@+id/decrement_minute_slab"
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:background="@color/black"
+                        android:padding="@dimen/two_dp"
+                        android:src="@drawable/ic_down_arrow_white"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/value_minute_slab"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:contentDescription="@string/decrement"/>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:id="@+id/layout_hour_slab"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/twenty_four_dp"
+                    android:layout_marginEnd="@dimen/forty_dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/set_total_ride_time_tv">
+
+                    <EditText
+                        android:id="@+id/value_hour_slab"
+                        style="@style/AppFont"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:backgroundTint="@color/white"
+                        android:inputType="number"
+                        android:paddingHorizontal="@dimen/sixteen_dp"
+                        android:text="@string/zero"
+                        android:textColor="@color/black"
+                        android:textSize="@dimen/fourteen_sp"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/decrement_hour_slab"
+                        app:layout_constraintStart_toEndOf="@id/increment_hour_slab"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <ImageButton
+                        android:id="@+id/increment_hour_slab"
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:background="@color/black"
+                        android:padding="@dimen/two_dp"
+                        android:src="@drawable/ic_up_arrow_white"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/value_hour_slab"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:contentDescription="@string/increment"/>
+
+                    <ImageButton
+                        android:id="@+id/decrement_hour_slab"
+                        android:layout_width="wrap_content"
+                        android:layout_height="0dp"
+                        android:background="@color/black"
+                        android:padding="@dimen/two_dp"
+                        android:src="@drawable/ic_down_arrow_white"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toEndOf="@id/value_hour_slab"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:contentDescription="@string/decrement"/>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
+    </FrameLayout>
+
+    <include layout="@layout/toolbar" />
+</androidx.constraintlayout.widget.ConstraintLayout>

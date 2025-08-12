@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/eight_dp"
+    android:background="@color/black">
+
+    <Button
+        android:id="@+id/turn_on"
+        android:layout_width="@dimen/two_hundred_dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/thirty_six_dp"
+        android:background="@drawable/white_button"
+        android:text="@string/turn_on"
+        android:textAllCaps="false"
+        android:textColor="@color/black"
+        android:textSize="@dimen/fourteen_sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bluetooth" />
+
+    <TextView
+        android:id="@+id/cancel"
+        android:layout_width="@dimen/two_hundred_dp"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:layout_marginTop="@dimen/thirty_six_dp"
+        android:layout_marginBottom="@dimen/twenty_four_dp"
+        android:text="@string/cancel"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="@dimen/fourteen_sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/turn_on" />
+
+    <ImageView
+        android:id="@+id/bluetooth"
+        android:layout_width="@dimen/sixty_four_dp"
+        android:layout_height="@dimen/sixty_four_dp"
+        android:layout_marginTop="@dimen/thirty_six_dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/content"
+        app:srcCompat="@drawable/ic_bluetooth"
+        android:contentDescription="@string/bluetooth_icon"/>
+
+    <TextView
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/sixteen_dp"
+        android:layout_marginTop="@dimen/thirty_six_dp"
+        android:layout_marginEnd="@dimen/sixteen_dp"
+        android:text="@string/bluetooth_permission"
+        android:textAlignment="center"
+        android:textColor="@color/white"
+        android:textSize="@dimen/sixteen_sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

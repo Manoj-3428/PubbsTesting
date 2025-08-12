@@ -1,0 +1,13 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+    <style name="SelectionSwitch" parent="Theme.AppCompat.Light">
+        <item name="colorControlActivated">@color/green_900</item>
+        <item name="colorControlNormal">@color/red_900</item>
+        <item name="android:color" android:state_checked="true">@color/green_300</item>
+    </style>
+</resources>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+    <group android:checkableBehavior="none"> <!--if it is single then menu items are highlighted after closing the fragment-->
+        <item
+            android:id="@+id/nav_manage_zone_manger"
+            android:title="Manage Zone Manger" />
+        <item
+            android:id="@+id/nav_view_panel"
+            android:title="View Panel" />
+        <item
+            android:id="@+id/nav_subscription"
+            android:title="Subscription" />
+        <item
+            android:id="@+id/nav_inventory"
+            android:title="Inventory" />
+        <item
+            android:id="@+id/nav_profile"
+            android:title="Profile" />
+        <item
+            android:id="@+id/logout"
+            android:title="Logout" />
+    </group>
+
+</menu>

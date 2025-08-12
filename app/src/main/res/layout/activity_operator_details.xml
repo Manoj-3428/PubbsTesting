@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".OperatorDetails">
+
+    <FrameLayout
+        android:id="@+id/operator_details_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/operator_details_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <include layout="@layout/toolbar" />
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/new_operator_added_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="@dimen/thirty_six_dp"
+                    android:layout_marginTop="@dimen/seventy_two_dp"
+                    android:layout_marginEnd="@dimen/thirty_six_dp"
+                    app:cardCornerRadius="@dimen/four_dp"
+                    app:cardElevation="@dimen/ten_dp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/toolbar_layout">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginBottom="@dimen/twenty_four_dp">
+
+                        <TextView
+                            android:id="@+id/organisation_name_tv"
+                            style="@style/AppFont"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="@dimen/twelve_dp"
+                            android:layout_marginTop="@dimen/twenty_four_dp"
+                            android:layout_marginRight="@dimen/twelve_dp"
+                            android:paddingLeft="@dimen/ten_dp"
+                            android:text="Organisation Name"
+                            android:textColor="@color/colorAccent"
+                            android:textSize="@dimen/fourteen_sp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent" />
+
+                        <TextView
+                            android:id="@+id/owner_name_tv"
+                            style="@style/AppFont"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="@dimen/twelve_dp"
+                            android:layout_marginTop="@dimen/twenty_four_dp"
+                            android:layout_marginRight="@dimen/twelve_dp"
+                            android:paddingLeft="@dimen/ten_dp"
+                            android:text="Name of the Owner"
+                            android:textColor="@color/colorAccent"
+                            android:textSize="@dimen/fourteen_sp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/view_7" />
+
+                        <TextView
+                            android:id="@+id/mobile_number_tv"
+                            style="@style/AppFont"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="@dimen/twelve_dp"
+                            android:layout_marginTop="@dimen/twenty_four_dp"
+                            android:layout_marginRight="@dimen/twelve_dp"
+                            android:paddingLeft="@dimen/ten_dp"
+                            android:text="Mobile no."
+                            android:textColor="@color/colorAccent"
+                            android:textSize="@dimen/fourteen_sp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/view_8" />
+
+                        <TextView
+                            android:id="@+id/email_id_tv"
+                            style="@style/AppFont"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="@dimen/twelve_dp"
+                            android:layout_marginTop="@dimen/twenty_four_dp"
+                            android:layout_marginRight="@dimen/twelve_dp"
+                            android:paddingLeft="@dimen/ten_dp"
+                            android:text="Email ID"
+                            android:textColor="@color/colorAccent"
+                            android:textSize="@dimen/fourteen_sp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/view_9" />
+
+                        <TextView
+                            android:id="@+id/operator_key_tv"
+                            style="@style/AppFont"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginLeft="@dimen/twelve_dp"
+                            android:layout_marginTop="@dimen/twenty_four_dp"
+                            android:layout_marginRight="@dimen/twelve_dp"
+                            android:inputType="textShortMessage"
+                            android:paddingLeft="@dimen/ten_dp"
+                            android:text="Operator Key"
+                            android:textColor="@color/colorAccent"
+                            android:textSize="@dimen/fourteen_sp"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/view_10" />
+
+                        <View
+                            android:id="@+id/view_7"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginLeft="@dimen/twelve_dp"
+                            android:layout_marginTop="@dimen/twenty_four_dp"
+                            android:layout_marginRight="@dimen/twelve_dp"
+                            android:background="@android:color/black"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/organisation_name_tv" />
+
+                        <View
+                            android:id="@+id/view_8"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginLeft="@dimen/twelve_dp"
+                            android:layout_marginTop="@dimen/twenty_four_dp"
+                            android:layout_marginRight="@dimen/twelve_dp"
+                            android:background="@android:color/black"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/owner_name_tv" />
+
+                        <View
+                            android:id="@+id/view_9"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginLeft="@dimen/twelve_dp"
+                            android:layout_marginTop="@dimen/twenty_four_dp"
+                            android:layout_marginRight="@dimen/twelve_dp"
+                            android:background="@android:color/black"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/mobile_number_tv" />
+
+
+                        <View
+                            android:id="@+id/view_10"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginLeft="@dimen/twelve_dp"
+                            android:layout_marginTop="@dimen/twenty_four_dp"
+                            android:layout_marginRight="@dimen/twelve_dp"
+                            android:background="@android:color/black"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/email_id_tv" />
+
+                        <View
+                            android:id="@+id/view_11"
+                            android:layout_width="match_parent"
+                            android:layout_height="1dp"
+                            android:layout_marginLeft="@dimen/twelve_dp"
+                            android:layout_marginTop="@dimen/twenty_four_dp"
+                            android:layout_marginRight="@dimen/twelve_dp"
+                            android:background="@android:color/black"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toBottomOf="@+id/operator_key_tv" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.cardview.widget.CardView>
+
+                <TextView
+                    android:id="@+id/sell_locks"
+                    style="@style/AppFont"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/thirty_six_dp"
+                    android:layout_marginRight="@dimen/thirty_six_dp"
+                    android:layout_marginBottom="@dimen/sixty_four_dp"
+                    android:drawableEnd="@drawable/ic_trending"
+                    android:text="@string/sell_lock"
+                    android:textColor="@color/light_blue_A800"
+                    android:textSize="@dimen/sixteen_sp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </ScrollView>
+    </FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

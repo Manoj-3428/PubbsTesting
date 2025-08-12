@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/round_button_white"
+    android:paddingHorizontal="@dimen/twenty_four_dp">
+
+    <TextView
+        android:id="@+id/discount_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/twenty_four_dp"
+        android:fontFamily="@font/comfortaa_regular"
+        android:text="Please enter the discount %"
+        android:textColor="@color/black"
+        android:textSize="@dimen/fourteen_sp"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+        android:id="@+id/discount_data"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/eight_dp"
+        android:background="@drawable/rectangular_box"
+        android:inputType="numberDecimal"
+        android:padding="@dimen/eight_dp"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toBottomOf="@+id/discount_text" />
+
+    <TextView
+        android:id="@+id/validity_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/sixteen_dp"
+        android:fontFamily="@font/comfortaa_regular"
+        android:text="Please enter offer validity"
+        android:textColor="@color/black"
+        android:textSize="@dimen/fourteen_sp"
+        app:layout_constraintTop_toBottomOf="@+id/discount_data" />
+
+    <EditText
+        android:id="@+id/validity_data"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/eight_dp"
+        android:layout_marginBottom="@dimen/sixteen_dp"
+        android:background="@drawable/rectangular_box"
+        android:inputType="number"
+        android:padding="@dimen/eight_dp"
+        android:textColor="@color/black"
+        app:layout_constraintTop_toBottomOf="@+id/validity_text" />
+
+    <TextView
+        android:id="@+id/date_time_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/sixteen_dp"
+        android:text="Please select offer start date"
+        android:textColor="@color/black"
+        android:textSize="@dimen/fourteen_sp"
+        app:layout_constraintTop_toBottomOf="@id/validity_data" />
+
+    <EditText
+        android:id="@+id/date_picker"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/eight_dp"
+        android:background="@drawable/rectangular_box"
+        android:hint="DD/MM/YYYY"
+        android:inputType="textShortMessage"
+        android:padding="@dimen/eight_dp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/black"
+        android:textSize="@dimen/fourteen_sp"
+        app:layout_constraintTop_toBottomOf="@id/date_time_text" />
+
+    <CheckBox
+        android:id="@+id/is_active"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Active"
+        app:layout_constraintTop_toBottomOf="@id/date_picker"
+        app:layout_constraintStart_toStartOf="@id/date_picker"
+        android:layout_marginTop="@dimen/eight_dp"
+        android:buttonTint="@color/black"
+        android:textColor="@color/black"
+        android:textSize="@dimen/fourteen_sp"
+        android:checked="true"/>
+
+
+    <Button
+        android:id="@+id/submit"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/sixteen_dp"
+        android:layout_marginBottom="@dimen/sixteen_dp"
+        android:background="@drawable/round_button"
+        android:paddingHorizontal="@dimen/twenty_four_dp"
+        android:text="Submit"
+        android:textAllCaps="false"
+        android:textColor="@color/white"
+        android:textSize="@dimen/fourteen_sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/is_active" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

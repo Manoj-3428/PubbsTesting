@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="SelectionSwitch" parent="Theme.AppCompat.Light">
+        <item name="colorControlActivated">@color/green_900</item>
+        <item name="colorControlNormal">@color/red_900</item>
+        <item name="android:color" android:state_checked="true">@color/green_300</item>
+        <item name="android:trackTint" android:state_checked="true">@color/red_300</item>
+    </style>
+</resources>
