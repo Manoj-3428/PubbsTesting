@@ -5,39 +5,149 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/white"
-    android:paddingBottom="@dimen/eight_dp"
     tools:context=".Redistribution">
 
-    <include layout="@layout/toolbar" />
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/no_data_found"
+    <!-- Toolbar -->
+    <include
+        android:id="@+id/app_bar"
+        layout="@layout/toolbar" />
+
+    <!-- Initial Button Container -->
+    <LinearLayout
+        android:id="@+id/initial_buttons_container"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/zero_dp"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/app_bar">
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/app_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
 
-        <ImageView
-            android:id="@+id/img"
-            android:layout_width="@dimen/one_hundred_dp"
-            android:layout_height="@dimen/one_hundred_dp"
-            android:src="@drawable/sad"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:contentDescription="@string/no_data"/>
-
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Cycle Demand Button -->
+        <Button
+            android:id="@+id/cycle_demand_btn"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/eight_dp"
-            android:fontFamily="@font/comfortaa_regular"
-            android:text="Sorry ! under development"
-            android:textColor="@color/black"
-            app:layout_constraintEnd_toEndOf="@id/img"
-            app:layout_constraintStart_toStartOf="@id/img"
-            app:layout_constraintTop_toBottomOf="@+id/img" />
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/btn_cycle_demand_solid"
+            android:text="Cycle Demand"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:padding="16dp"
+            android:textSize="16sp" />
+
+    <!-- Redistribute Button -->
+        <Button
+            android:id="@+id/redistribute_btn_initial"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/btn_redistribute_outline"
+            android:text="Redistribute"
+            android:textColor="#0ABDE3"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:padding="16dp"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+    <!-- Redistribute Button (for existing redistribution flow) -->
+    <Button
+        android:id="@+id/redistribute_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:backgroundTint="@color/purple_500"
+        android:text="Redistribute Now"
+        android:textColor="@android:color/white"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/app_bar" />
+
+    <!-- Progress Bar -->
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/app_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="12dp" />
+
+    <!-- RecyclerView for showing output (Redistribution plan) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/redistribution_list"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:padding="12dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/progress_bar"
+        app:layout_constraintBottom_toTopOf="@id/done_redistribution_btn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+    
+    <!-- RecyclerView for Cycle Demand stations -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/cycle_demand_list"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/white"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/progress_bar"
+        app:layout_constraintBottom_toTopOf="@id/submit_cycle_demand_btn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- No Data Found -->
+    <TextView
+        android:id="@+id/no_data_found"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No stations found!"
+        android:textColor="@color/black"
+        android:visibility="gone"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@id/progress_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Submit Button (for Cycle Demand flow) -->
+    <Button
+        android:id="@+id/submit_cycle_demand_btn"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/btn_submit_turquoise"
+        android:text="Submit"
+        android:textColor="@android:color/white"
+        android:textAllCaps="false"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:padding="16dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Done Redistribution Button -->
+    <Button
+        android:id="@+id/done_redistribution_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:backgroundTint="@color/teal_700"
+        android:text="Done Redistribution"
+        android:textColor="@android:color/white"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

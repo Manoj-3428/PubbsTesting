@@ -7,6 +7,12 @@
             android:id="@+id/am_live_track"
             android:title="Live Track" />
         <item
+            android:id="@+id/am_cycle_track"
+            android:title="Cycle Track" />
+        <item
+            android:id="@+id/am_redistribution"
+            android:title="Redisribution" />
+        <item
             android:id="@+id/am_manage_cycle"
             android:title="Manage Bicycle" />
         <item

@@ -4,18 +4,18 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:padding="@dimen/eight_dp"
-    android:background="@color/black">
+    android:background="@android:color/white">
 
     <Button
         android:id="@+id/turn_on"
         android:layout_width="@dimen/two_hundred_dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="@dimen/thirty_six_dp"
-        android:background="@drawable/white_button"
+        android:background="@color/blue"
         android:text="@string/turn_on"
         android:textAllCaps="false"
-        android:textColor="@color/black"
-        android:textSize="@dimen/fourteen_sp"
+        android:textColor="@color/white"
+        android:textSize="@dimen/sixteen_sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/bluetooth" />
@@ -28,9 +28,10 @@
         android:layout_marginTop="@dimen/thirty_six_dp"
         android:layout_marginBottom="@dimen/twenty_four_dp"
         android:text="@string/cancel"
+        android:background="@color/white"
         android:textAllCaps="false"
-        android:textColor="@color/white"
-        android:textSize="@dimen/fourteen_sp"
+        android:textColor="@color/light_blue_A800"
+        android:textSize="@dimen/sixteen_sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -44,19 +45,19 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/content"
-        app:srcCompat="@drawable/ic_bluetooth"
-        android:contentDescription="@string/bluetooth_icon"/>
+        app:srcCompat="@drawable/bluetooth"
+        android:contentDescription="@string/bluetooth_icon" />
 
     <TextView
         android:id="@+id/content"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="369dp"
+        android:layout_height="53dp"
         android:layout_marginStart="@dimen/sixteen_dp"
         android:layout_marginTop="@dimen/thirty_six_dp"
         android:layout_marginEnd="@dimen/sixteen_dp"
         android:text="@string/bluetooth_permission"
         android:textAlignment="center"
-        android:textColor="@color/white"
+        android:textColor="@color/black"
         android:textSize="@dimen/sixteen_sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

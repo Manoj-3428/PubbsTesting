@@ -24,23 +24,17 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 
 public class Utility extends Application {
     public static final int NOTIFICATION_ID = 65;
     public static final String NOTIFICATION_CHANNEL_ID = "PUBBS_CH_01";
-    public static final String PUBBS_TAG = "PUBBS_LOG";
 
     //For Nordic-Parita Dey
     public static final String SERVICE = "6e400001-b5a3-f393-e0a9-e50e24dcca9e";
     public static final String NOTIFY = "6e400003-b5a3-f393-e0a9-e50e24dcca9e";
     public static final String WRITE = "6e400002-b5a3-f393-e0a9-e50e24dcca9e";
     public static final String NOTIFICATION = "00002902-0000-1000-8000-00805f9b34fb";
-
-    //For Quectel-Parita Dey
-   /* public static final String SERVICE = "00003412-0000-1000-8000-00805f9b34fb";
-    public static final String NOTIFY = "000001c0-0000-1000-8000-00805f9b34fb";
-    public static final String WRITE = "000001c0-0000-1000-8000-00805f9b34fb";
-    public static final String NOTIFICATION = "000001d0-0000-1000-8000-00805f9b34fb";*/
 
     public static final int appid = 345678;
     public static final byte[] COMMUNICATION_KEY_COMMAND = {1, 1};
@@ -50,34 +44,54 @@ public class Utility extends Application {
     public static final byte[] BATTERY_STATUS_COMMAND = {4, 1};
     public static final byte[] CLEAR_LOCK_DATA_COMMAND = {5, 2};
     public static final byte[] HOLD_STOP_COMMAND = {6, 1};
+    public static final byte[] RESET_COMMAND = {9, 1};
+    public static final byte[] RESET2_COMMAND = {10, 1};
+    public static final byte[] END_RIDE_COMMAND = {8, 1};
 
-    public final static String INTENT_DATA = "in.pubbs.app.INTENT_DATA";
-    public final static String INTENT_DATA_SELF_DISTRACT = "in.pubbs.app.INTENT_DATA_SELF_DISTRACT";
-    public final static String GATT_CONNECTED = "in.pubbs.app.GATT_CONNECTED";
-    public final static String GATT_DISCONNECTED = "in.pubbs.app.GATT_DISCONNECTED";
-    public final static String GATT_SERVICES_DISCOVERED = "in.pubbs.app.GATT_SERVICES_DISCOVERED";
-    public static final String INVALID_BLUETOOTH = "in.pubbs.app.INVALID_BLUETOOTH";
-    public final static String REQUEST_KEY = "in.pubbs.app.REQUEST_KEY";
-    public final static String KEY_RECEIVED = "in.pubbs.app.KEY_RECEIVED";
-    public final static String CHECKING_LOCK_STATUS = "in.pubbs.app.CHECKING_LOCK_STATUS";
-    public final static String CHECK_BATTERY_STATUS = "in.pubbs.app.CHECK_BATTERY_STATUS";
-    public final static String LOCK_OPENED = "in.pubbs.app.LOCK_OPENED";
-    public final static String LOCK_ALREADY_OPENED = "in.pubbs.app.LOCK_ALREADY_OPENED";
-    public final static String LOCK_ON_HOLD = "in.pubbs.app.LOCK_ON_HOLD";
-    public final static String LOCKED = "in.pubbs.app.RIDE_ON_HOLD";
-    public final static String RIDE_ENDED = "in.pubbs.app.RIDE_ENDED";
-    public final static String HOLD_RIDE = "in.pubbs.app.HOLD_RIDE";
-    public final static String STOP_RIDE = "in.pubbs.app.STOP_RIDE";
-    public final static String OPEN_LOCK = "in.pubbs.app.OPEN_LOCK";
-    public final static String BATTERY_STATUS_RECEIVED = "in.pubbs.app.BATTERY_STATUS_RECEIVED";
-    public final static String CLEAR_ALL_DATA = "in.pubbs.app.CLEAR_ALL_DATA";
-    public final static String DATA_CLEARED = "in.pubbs.app.DATA_CLEARED";
-    public final static String MANUAL_LOCKED = "in.pubbs.app.MANUAL_LOCKED";
-    public final static String DISCONNECT_LOCK = "in.pubbs.app.DISCONNECT_LOCK";
-    public final static String CHECK_CONNECTION = "in.pubbs.app.CHECK_CONNECTION";
-    public static final String BOOKING_CONFIRM = "in.pubbs.app.BOOKING_CONFIRM";
+    public final static String INTENT_DATA = "in.pubbs.pubbsadmin.INTENT_DATA";
+    public final static String INTENT_DATA_SELF_DISTRACT = "in.pubbs.pubbsadmin.INTENT_DATA_SELF_DISTRACT";
+
+    public final static String GATT_CONNECTED = "in.pubbs.pubbsadmin.GATT_CONNECTED";
+    public final static String GATT_DISCONNECTED = "in.pubbs.pubbsadmin.GATT_DISCONNECTED";
+    public final static String GATT_SERVICES_DISCOVERED = "in.pubbs.pubbsadmin.GATT_SERVICES_DISCOVERED";
+    public static final String INVALID_BLUETOOTH = "in.pubbs.pubbsadmin.INVALID_BLUETOOTH";
+
+    public final static String REQUEST_KEY = "in.pubbs.pubbsadmin.REQUEST_KEY";
+    public final static String KEY_RECEIVED = "in.pubbs.pubbsadmin.KEY_RECEIVED";
+    public final static String CHECKING_LOCK_STATUS = "in.pubbs.pubbsadmin.CHECKING_LOCK_STATUS";
+    public final static String CHECK_BATTERY_STATUS = "in.pubbs.pubbsadmin.CHECK_BATTERY_STATUS";
+
+    public final static String LOCK_OPENED = "in.pubbs.pubbsadmin.LOCK_OPENED";
+    public final static String LOCK_RESET = "in.pubbs.pubbsadmin.LOCK_RESET";
+    public final static String LOCK_RESET2 = "in.pubbs.pubbsadmin.LOCK_RESET2";
+
+    public final static String RIDE_END_AUTO = "in.pubbs.pubbsadmin.RIDE_END_AUTO";
+    public final static String LOCK_CLOSED = "in.pubbs.pubbsadmin.LOCK_CLOSED";
+    public final static String LOCK_ALREADY_OPENED = "in.pubbs.pubbsadmin.LOCK_ALREADY_OPENED";
+    public final static String LOCK_ON_HOLD = "in.pubbs.pubbsadmin.LOCK_ON_HOLD";
+    public final static String LOCKED = "in.pubbs.pubbsadmin.RIDE_ON_HOLD";
+    public final static String RIDE_ENDED = "in.pubbs.pubbsadmin.RIDE_ENDED";
+    public final static String HOLD_RIDE = "in.pubbs.pubbsadmin.HOLD_RIDE";
+    public final static String STOP_RIDE = "in.pubbs.pubbsadmin.STOP_RIDE";
+
+    public final static String OPEN_LOCK = "in.pubbs.pubbsadmin.OPEN_LOCK";
+    public final static String RESET_LOCK = "in.pubbs.pubbsadmin.RESET_LOCK";
+    public final static String RESET2_LOCK = "in.pubbs.pubbsadmin.RESET2_LOCK";
+
+    public final static String END_RIDE_AUTO = "in.pubbs.pubbsadmin.END_RIDE_AUTO";
+    public final static String CLOSE_LOCK = "in.pubbs.pubbsadmin.CLOSE_LOCK";
+
+    public final static String BATTERY_STATUS_RECEIVED = "in.pubbs.pubbsadmin.BATTERY_STATUS_RECEIVED";
+    public final static String CLEAR_ALL_DATA = "in.pubbs.pubbsadmin.CLEAR_ALL_DATA";
+    public final static String DATA_CLEARED = "in.pubbs.pubbsadmin.DATA_CLEARED";
+    public final static String MANUAL_LOCKED = "in.pubbs.pubbsadmin.MANUAL_LOCKED";
+    public final static String DISCONNECT_LOCK = "in.pubbs.pubbsadmin.DISCONNECT_LOCK";
+    public final static String CHECK_CONNECTION = "in.pubbs.pubbsadmin.CHECK_CONNECTION";
+    public static final String BOOKING_CONFIRM = "in.pubbs.pubbsadmin.BOOKING_CONFIRM";
+
+    public static final String LOCATION_SERVICE = "in.pubbs.pubbsadmin.LOCATION_SERVICE";
+
     private static final int MY_PERMISSIONS_REQUEST_WRITE_EXTERNAL_STORAGE = 14;
-    public static final String LOCATION_SERVICE = "in.pubbs.app.LOCATION_SERVICE";
 
     private static String areaCode;
     private static String baseFare;
@@ -90,10 +104,35 @@ public class Utility extends Application {
     }
 
     public static byte[] prepareBytes(byte[] communicationKey, int appid, byte[] command, byte[] data) {
+//        int dataSize = (data != null) ? data.length : 2; //new code
+//        int totalSize = 2 + 6 + communicationKey.length + command.length + dataSize; //new code
+//        byte[] instruction = new byte[totalSize]; // new code
+        //
         byte[] instruction = new byte[16];
         instruction[0] = (byte) 0xF;
         instruction[1] = (byte) 8;
+        //byte[] app_id = ByteBuffer.allocate(6).putInt(appid).array(); //new code
+
         int j = 2;
+        // Copy appid into instruction (ensure 6-byte size)
+//        System.arraycopy(app_id, 0, instruction, j, app_id.length);
+//        j += app_id.length;
+//
+//        // Copy communicationKey
+//        System.arraycopy(communicationKey, 0, instruction, j, communicationKey.length);
+//        j += communicationKey.length;
+//        // Copy command
+//        System.arraycopy(command, 0, instruction, j, command.length);
+//        j += command.length;
+//
+//        // Copy data or add zero bytes
+//        if (data != null) {
+//            System.arraycopy(data, 0, instruction, j, data.length);
+//        } else {
+//            instruction[j] = 0;
+//            instruction[j + 1] = 0;
+//        }
+
         byte[] app_id = ByteBuffer.allocate(6).putInt(appid).array();
         for (int i = 0; i < 6; i++) {
             instruction[j] = app_id[i];
@@ -103,6 +142,8 @@ public class Utility extends Application {
             instruction[j] = b;
             j++;
         }
+
+
         for (byte b : command) {
             instruction[j] = b;
             j++;
@@ -117,6 +158,7 @@ public class Utility extends Application {
             instruction[j + 1] = (byte) 0;
         }
         return instruction;
+
     }
 
     public static byte[] getByte(byte[] dataByte, int byteLength, int startPosition) {
@@ -147,6 +189,10 @@ public class Utility extends Application {
         intentFilter.addAction(REQUEST_KEY);
         intentFilter.addAction(CHECKING_LOCK_STATUS);
         intentFilter.addAction(OPEN_LOCK);
+        intentFilter.addAction(RESET_LOCK);
+        intentFilter.addAction(RESET2_LOCK);
+        intentFilter.addAction(END_RIDE_AUTO);
+        intentFilter.addAction(CLOSE_LOCK);
         intentFilter.addAction(CHECK_BATTERY_STATUS);
         intentFilter.addAction(CLEAR_ALL_DATA);
         intentFilter.addAction(DISCONNECT_LOCK);
@@ -163,6 +209,8 @@ public class Utility extends Application {
         intentFilter.addAction(GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(LOCK_ALREADY_OPENED);
         intentFilter.addAction(LOCK_ON_HOLD);
+        intentFilter.addAction(LOCK_OPENED);   // ✅ IMPORTANT — YOU MISSED THIS
+
         intentFilter.addAction(RIDE_ENDED);
         intentFilter.addAction(BATTERY_STATUS_RECEIVED);
         intentFilter.addAction(KEY_RECEIVED);
@@ -178,8 +226,8 @@ public class Utility extends Application {
         PendingIntent pIntent = PendingIntent.getActivity(context, NOTIFICATION_ID, intent, PendingIntent.FLAG_CANCEL_CURRENT | PendingIntent.FLAG_IMMUTABLE);
         notificationBuilder
                 .setAutoCancel(false)
-                .setSmallIcon(R.drawable.admin_app_logo)
-                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.admin_app_logo))
+                .setSmallIcon(R.drawable.ic_android_black)
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_android_black))
                 .setContentIntent(pIntent)
                 .setContentTitle(title)
                 .setContentText(message)
@@ -202,7 +250,7 @@ public class Utility extends Application {
 
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID);
         notificationBuilder.setOngoing(true)
-                .setSmallIcon(R.drawable.admin_app_logo) // change the notification's app logo
+                .setSmallIcon(R.drawable.ic_android_black) // change the notification's app logo
                 .setContentIntent(pIntent)
                 .setContentTitle(title)
                 .setContentText(message)
@@ -218,7 +266,7 @@ public class Utility extends Application {
     public static void updateNotification(String title, String message, Intent intent, Context context) {
         Notification notification = rideNotification(context, intent, title, message);
         NotificationManager manager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(NOTIFICATION_ID, notification);
+        Objects.requireNonNull(manager).notify(NOTIFICATION_ID, notification);
     }
 
     public static boolean isMyServiceRunning(Context context, Class<?> serviceClass) {
@@ -296,3 +344,4 @@ public class Utility extends Application {
                 Environment.MEDIA_MOUNTED_READ_ONLY.equals(state);
     }
 }
+

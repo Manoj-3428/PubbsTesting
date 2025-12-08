@@ -304,6 +304,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         else if (itemId == R.id.am_live_track) {
             startActivity(new Intent(MainActivity.this, LiveTrackActivity.class));
         }
+        else if (itemId == R.id.am_cycle_track) {
+            startActivity(new Intent(MainActivity.this, CycleTrack.class));
+        }
+        else if (itemId == R.id.am_redistribution) {
+            startActivity(new Intent(MainActivity.this, Redistribution.class));
+        }
         else if (itemId == R.id.am_manage_cycle) {
             startActivity(new Intent(MainActivity.this, BicycleListActivity.class));
         }
@@ -324,6 +330,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
         else if (itemId == R.id.sm_redistribution) {
             startActivity(new Intent(MainActivity.this, Redistribution.class));
+        }
+
+        else if (itemId == R.id.sm_distribution) {
+            startActivity(new Intent(MainActivity.this, Distribute.class));
         }
 //        else if (itemId == R.id.sm_user_support) {
 //            startActivity(new Intent(MainActivity.this, UserMessage.class));

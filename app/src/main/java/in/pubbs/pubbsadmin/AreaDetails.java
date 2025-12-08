@@ -41,7 +41,6 @@ import java.util.Objects;
 import in.pubbs.pubbsadmin.Model.Area;
 import in.pubbs.pubbsadmin.Model.Station;
 import in.pubbs.pubbsadmin.Model.StationList;
-import in.pubbs.pubbsadmin.Model.Subscription;
 import in.pubbs.pubbsadmin.View.CustomAlertDialog;
 
 /*created by parita dey*/
@@ -422,6 +421,7 @@ else if (v.getId() == R.id.add_rate_chart) {
             stationLongitude = data.getStringExtra("station_longitude");
             stationRadius = data.getStringExtra("station_radius");
             stationArrayList = (ArrayList) data.getSerializableExtra("station_details");
+
             Log.d(TAG, "From AddStation:" + stationId + "\t" + stationName + "\t" + stationLatitude + "\t" + stationLongitude + "\t" + stationRadius);
         }
        /* if (requestCode == 4) { //add rate chart from Rate Chart
@@ -676,7 +676,7 @@ else if (v.getId() == R.id.add_rate_chart) {
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (Station i : stationArrayList) {
                     Station createStation = new Station(areaId, area_name.getText().toString(), markerList, i.getStationId(), i.getStationName(), i.getStationLatitude(), i.getStationLongitude(), i.getStationRadius(),
-                            i.getStationType(), true, parent, currentDate);
+                            i.getStationType(), true, parent, currentDate, 0, 0);
                     stationDbPath.child(createStation.getStationId()).setValue(createStation);
                 }
             }

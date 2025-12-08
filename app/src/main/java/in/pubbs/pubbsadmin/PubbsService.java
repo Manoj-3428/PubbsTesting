@@ -16,18 +16,15 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.Location;
-import android.location.LocationManager;
 import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
+import android.Manifest;
+
+
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
-
-import com.google.android.gms.location.FusedLocationProviderClient;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -49,7 +46,7 @@ public class PubbsService extends Service {
     private static byte[] communicationKey = new byte[4];
     private boolean manualDisconnect = false;
     private boolean selfDistract = false;
-    private String bookingId = null;
+    //private String bookingId = null;
 
     private Intent mapIntent;
 
@@ -57,58 +54,60 @@ public class PubbsService extends Service {
     public final static UUID READ_UUID = UUID.fromString(Utility.NOTIFY);
     public final static UUID WRITE_UUID = UUID.fromString(Utility.WRITE);
     public final static UUID NOTIFICATION_UUID = UUID.fromString(Utility.NOTIFICATION);
-    /*public final static UUID BATTERY_SERVICE_UUID = UUID.fromString(Utility.BATTERY_SERVICE);
-    public final static UUID BATTERY_LEVEL_UUID = UUID.fromString(Utility.BATTERY_LEVEL);
-*/
-    private LocationManager mLocationManager = null;
-    private static int LOCATION_INTERVAL = 3000;
-    private static int LOCATION_FAST_INTERVAL = 1000;
-    private static float LOCATION_DISTANCE = 1.00f;
-    private Location mLastLocation;
-    private LocationRequest mLocationRequest;
-    private FusedLocationProviderClient fusedLocationProviderClient;
-    private Location lastLocation = null;
 
 
     @Override
     public void onCreate() {
         super.onCreate();
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        mapIntent = new Intent(this, AddLock.class);
+        mapIntent = new Intent(this, MainActivity.class);
         mapIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         initialize();
-        if (mLocationManager == null) {
-            mLocationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-        }
-        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(LOCATION_INTERVAL);
-        mLocationRequest.setFastestInterval(LOCATION_FAST_INTERVAL);
-        mLocationRequest.setSmallestDisplacement(LOCATION_DISTANCE);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
         EventBus.getDefault().register(this);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.S)
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         initialize();
         registerReceiver(broadcastReceiver, Utility.serviceIntentFilter());
         bluetoothAddress = intent.getStringExtra("address");
-        // modify by dipankar
-        ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT);
 
-        if (mBluetoothGatt != null)  mBluetoothGatt.close();
+        // ✅ Added safe permission check (no logic change)
+        if (mBluetoothGatt != null) {
+            if (ActivityCompat.checkSelfPermission(this,
+                    Manifest.permission.BLUETOOTH_CONNECT)
+                    == PackageManager.PERMISSION_GRANTED) {
+                mBluetoothGatt.close();
+            } else {
+                Log.w(TAG, "BLUETOOTH_CONNECT permission not granted — skipping mBluetoothGatt.close()");
+            }
+        }
+
         connect(bluetoothAddress);
         mapIntent.putExtra("status", 1);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForeground(Utility.NOTIFICATION_ID, Utility.rideNotificationSDK26(this, mapIntent, "Connecting...", "Connecting bike lock"));
+            startForeground(
+                    Utility.NOTIFICATION_ID,
+                    Utility.rideNotificationSDK26(
+                            this, mapIntent,
+                            "Connecting...", "Connecting bike lock"
+                    )
+            );
         } else {
-            startForeground(Utility.NOTIFICATION_ID, Utility.rideNotification(this, mapIntent, "Connecting...", "Connecting bike lock"));
+            startForeground(
+                    Utility.NOTIFICATION_ID,
+                    Utility.rideNotification(
+                            this, mapIntent,
+                            "Connecting...", "Connecting bike lock"
+                    )
+            );
         }
+
         return super.onStartCommand(intent, flags, startId);
     }
+
 
     @Override
     public void onDestroy() {
@@ -227,16 +226,7 @@ public class PubbsService extends Service {
         bluetoothAddress = address;
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.S)
     private boolean isConnected(String address) {
-
-        // Check Bluetooth permission for Android 12+ (API 31 and above)
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.BLUETOOTH_CONNECT)
-                != PackageManager.PERMISSION_GRANTED) {
-        }
-
-
-
         Log.d(TAG, "My address: isConnected ********" + address);
         for (BluetoothDevice device : mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT)) {
             Log.d(TAG, address);
@@ -271,7 +261,7 @@ public class PubbsService extends Service {
         for (byte b : cmd) {
             builder.append(String.format("%x ", b));
         }
-        Log.d(TAG, "BLUETOOTH_WRITE_CMD: " + builder.toString());
+        Log.d(TAG, "BLUETOOTH_WRITE_CMD: " + builder);
         //final byte[] encryptedByte=CryptAES.encode(AppConfig.ENCRYPTION_KEY,AppConfig.IV,bytes);
         /*get the read characteristic from the service*/
         BluetoothGattCharacteristic mWriteCharacteristic = mCustomService.getCharacteristic(WRITE_UUID);
@@ -295,18 +285,21 @@ public class PubbsService extends Service {
         final byte[] responseByte = characteristic.getValue();
         if (responseByte.length == 16) {
             Log.d(TAG, "getByte method is called in onReceivedData");
+
+            Log.d(TAG,"Received data from device " + Arrays.toString(responseByte)); //modify
+
             final byte[] cmd = Utility.getByte(responseByte, 2, 12);
             byte[] data = Utility.getByte(responseByte, 2, 14);
             StringBuilder builder = new StringBuilder();
             for (byte b : cmd) {
                 builder.append(String.format("%x", b));
             }
-            Log.d(TAG, "BLUETOOTH_CMD_RECEIVED: " + builder.toString());
+            Log.d(TAG, "BLUETOOTH_CMD_RECEIVED: " + builder);
             builder = new StringBuilder();
             for (byte datum : data) {
                 builder.append(String.format("%x", datum));
             }
-            Log.d(TAG, "BLUETOOTH_DATA_RECEIVED: " + builder.toString());
+            Log.d(TAG, "BLUETOOTH_DATA_RECEIVED: " + builder);
             if (Arrays.equals(cmd, Utility.COMMUNICATION_KEY_COMMAND)) {
                 communicationKey = Utility.getByte(responseByte, 4, 8);
                 Intent intent = new Intent(Utility.KEY_RECEIVED);
@@ -330,14 +323,39 @@ public class PubbsService extends Service {
             if (Arrays.equals(cmd, Utility.LOCK_COMMAND)) {
                 mapIntent.putExtra("status", 4);
                 Utility.updateNotification("Pubbs says", "Bicycle is locked", mapIntent, PubbsService.this);
-                Intent intent = new Intent(Utility.MANUAL_LOCKED);
+                Intent intent = new Intent(Utility.MANUAL_LOCKED); //MANUAL_LOCK
                 sendBroadcast(intent);
                 return;
             }
             if (Arrays.equals(cmd, Utility.UNLOCK_COMMAND)) {
+                Log.d(TAG, "Lock opened response detected — preparing to broadcast LOCK_OPENED");
+
                 Intent intent = new Intent(Utility.LOCK_OPENED);
+                intent.setPackage(getPackageName()); // ensure broadcast stays inside app
+
+                sendBroadcast(intent);
+                Log.d(TAG, "SENT BROADCAST -> " + Utility.LOCK_OPENED);
+            }
+
+
+            if (Arrays.equals(cmd, Utility.RESET_COMMAND)) {
+                Intent intent = new Intent(Utility.LOCK_RESET);
                 sendBroadcast(intent);
             }
+
+            if (Arrays.equals(cmd, Utility.RESET2_COMMAND)) {
+                Intent intent = new Intent(Utility.LOCK_RESET2);
+                sendBroadcast(intent);
+            }
+            if (Arrays.equals(cmd, Utility.END_RIDE_COMMAND)) {
+                Intent intent = new Intent(Utility.RIDE_END_AUTO);
+                sendBroadcast(intent);
+            }
+
+//            if (Arrays.equals(cmd, Utility.LOCK_COMMAND)) {
+//                Intent intent = new Intent(Utility.LOCK_CLOSED);
+//                sendBroadcast(intent);
+//            }
             if (Arrays.equals(cmd, Utility.BATTERY_STATUS_COMMAND)) {
                 Intent intent = new Intent(Utility.BATTERY_STATUS_RECEIVED);
                 intent.putExtra(Utility.INTENT_DATA, data);
@@ -347,7 +365,6 @@ public class PubbsService extends Service {
             if (Arrays.equals(cmd, Utility.CLEAR_LOCK_DATA_COMMAND)) {
                 Intent intent = new Intent(Utility.DATA_CLEARED);
                 sendBroadcast(intent);
-                return;
             }
         }
     }
@@ -387,6 +404,13 @@ public class PubbsService extends Service {
                 Log.d(TAG, "Attempting to start service discovery");
 
                 if (ActivityCompat.checkSelfPermission(PubbsService.this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                    // TODO: Consider calling
+                    //    ActivityCompat#requestPermissions
+                    // here to request the missing permissions, and then overriding
+                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                    //                                          int[] grantResults)
+                    // to handle the case where the user grants the permission. See the documentation
+                    // for ActivityCompat#requestPermissions for more details.
                     return;
                 }
                 mBluetoothGatt.discoverServices();
@@ -429,24 +453,23 @@ public class PubbsService extends Service {
             Log.d(TAG, Arrays.toString(descriptor.getCharacteristic().getValue()) + "   onDescriptorWrite******* " + status);
         }
 
-
-//        @Override
-//        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-//            super.onCharacteristicChanged(gatt, characteristic);
-//            Log.d(TAG, "onCharacteristicChanged");
-//            mBluetoothGatt.readCharacteristic(characteristic);
-//            onReceivedData(characteristic);
-//        }
-            // modify by dipankar
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
             Log.d(TAG, "onCharacteristicChanged");
-
-            // Call custom method to handle received data
+            if (ActivityCompat.checkSelfPermission(PubbsService.this, android.Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return;
+            }
+            mBluetoothGatt.readCharacteristic(characteristic);
             onReceivedData(characteristic);
         }
-
 
         @Override
         public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
@@ -473,6 +496,10 @@ public class PubbsService extends Service {
                     communicationKey[2] = (byte) 0;
                     communicationKey[3] = (byte) 0;
                     writeDataToLock(Utility.prepareBytes(communicationKey, Utility.appid, Utility.COMMUNICATION_KEY_COMMAND, data));
+
+                    byte[] result =Utility.prepareBytes(communicationKey, Utility.appid, Utility.COMMUNICATION_KEY_COMMAND, data); //modify
+                    String  arrayResult = Arrays.toString(result);
+                    Log.d(TAG,"sending data from android app to device" + arrayResult); //modify
                     break;
                 case Utility.CHECKING_LOCK_STATUS:
                     Log.d(TAG, "communication key: " + Arrays.toString(communicationKey));
@@ -481,6 +508,23 @@ public class PubbsService extends Service {
                 case Utility.OPEN_LOCK:
                     writeDataToLock(Utility.prepareBytes(communicationKey, Utility.appid, Utility.UNLOCK_COMMAND, data));
                     break;
+
+                case Utility.RESET_LOCK:
+                    writeDataToLock(Utility.prepareBytes(communicationKey, Utility.appid, Utility.RESET_COMMAND, data));
+                    break;
+
+                case Utility.RESET2_LOCK:
+                    writeDataToLock(Utility.prepareBytes(communicationKey, Utility.appid, Utility.RESET2_COMMAND, data));
+                    break;
+
+                case Utility.END_RIDE_AUTO:
+                    writeDataToLock(Utility.prepareBytes(communicationKey, Utility.appid, Utility.END_RIDE_COMMAND, data));
+                    break;
+
+                case Utility.CLOSE_LOCK:
+                    writeDataToLock(Utility.prepareBytes(communicationKey, Utility.appid, Utility.LOCK_COMMAND, data));
+                    break;
+
                 case Utility.CHECK_BATTERY_STATUS:
                     writeDataToLock(Utility.prepareBytes(communicationKey, Utility.appid, Utility.BATTERY_STATUS_COMMAND, data));
                     break;
@@ -495,14 +539,12 @@ public class PubbsService extends Service {
                     disconnect();
                     break;
                 case Utility.CHECK_CONNECTION:
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                        if (!isConnected(intent.getStringExtra("address"))) {
-                            Intent intent1 = new Intent(Utility.GATT_DISCONNECTED);
-                            sendBroadcast(intent1);
-                        } else {
-                            Intent intent1 = new Intent(Utility.GATT_CONNECTED);
-                            sendBroadcast(intent1);
-                        }
+                    if (!isConnected(intent.getStringExtra("address"))) {
+                        Intent intent1 = new Intent(Utility.GATT_DISCONNECTED);
+                        sendBroadcast(intent1);
+                    } else {
+                        Intent intent1 = new Intent(Utility.GATT_CONNECTED);
+                        sendBroadcast(intent1);
                     }
                     break;
             }

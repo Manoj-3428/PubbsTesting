@@ -37,10 +37,8 @@ import java.util.Date;
 import java.util.Objects;
 
 import in.pubbs.pubbsadmin.Model.Area;
-import in.pubbs.pubbsadmin.Model.AreaRate;
 import in.pubbs.pubbsadmin.Model.Station;
 import in.pubbs.pubbsadmin.Model.StationList;
-import in.pubbs.pubbsadmin.Model.Subscription;
 import in.pubbs.pubbsadmin.View.CustomAlertDialog;
 
 /*created by Parita Dey*/
@@ -547,7 +545,7 @@ public class ManageSystem extends AppCompatActivity implements View.OnClickListe
 
         for (Station i : stationArrayList) {
             Station createStation = new Station(areaId, area_name.getText().toString(), markerList, i.getStationId(), i.getStationName(), i.getStationLatitude(), i.getStationLongitude(), i.getStationRadius(),
-                    i.getStationType(), true, parent, currentDate);
+                    i.getStationType(), true, parent, currentDate, 0, 0);
             stationDbReference.child(createStation.getStationId()).setValue(createStation);
         }
 

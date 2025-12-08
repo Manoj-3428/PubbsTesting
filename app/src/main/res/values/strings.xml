@@ -304,4 +304,8 @@
     <string name="enter_time_gap_to_track_bicycle">Time gap to \n track bicycle</string>
     <string name="show_report">Show Report</string>
     <string name="manage_operator1">Manage Operator</string>
+    <string name="cycle_distribution">Cycle Distribution</string>
+    <string name="please_enter_city_name">enter_city_name</string>
+    <string name="negative_icon">negative_icon</string>
+    <string name="positive_icon">positive_icon</string>
 </resources>

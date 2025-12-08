@@ -6,7 +6,8 @@ import java.io.Serializable;
 import java.util.List;
 
 public class Station implements Serializable {
-    String areaId, areaName, stationId, stationName, stationLatitude, stationLongitude;
+    String areaId, areaName, stationId, stationName, stationLatitude, stationLongitude ;
+    int stationCycleCount,stationCycleDemand;
     List<LatLng> markerList;
     String stationRadius, stationType, createDate, createdBy;
     boolean stationStatus;
@@ -20,10 +21,12 @@ public class Station implements Serializable {
         this.stationLatitude = stationLatitude;
         this.stationLongitude = stationLongitude;
         this.stationRadius = stationRadius;
+        this.stationCycleCount = stationCycleCount;
+        this.stationCycleDemand = stationCycleDemand;
     }
 
     public Station(String areaId, String areaName, List<LatLng> markerList, String stationId, String stationName, String stationLatitude, String stationLongitude,
-                   String stationRadius, String stationType, boolean stationStatus, String createdBy, String createDate) {
+                   String stationRadius, String stationType, boolean stationStatus, String createdBy, String createDate, int stationCycleCount , int stationCycleDemand) {
         this.areaId = areaId;
         this.areaName = areaName;
         this.markerList = markerList;
@@ -36,6 +39,8 @@ public class Station implements Serializable {
         this.stationStatus = stationStatus;
         this.createdBy = createdBy;
         this.createDate = createDate;
+        this.stationCycleCount = stationCycleCount;
+        this.stationCycleDemand = stationCycleDemand;
     }
 
     public String getAreaId() {
@@ -129,8 +134,20 @@ public class Station implements Serializable {
     public boolean isStationStatus() {
         return stationStatus;
     }
+    public int isstationCycleCount() {
+        return stationCycleCount;
+    }
+    public int isstationCycleDemand() {
+        return stationCycleDemand;
+    }
 
     public void setStationStatus(boolean stationStatus) {
         this.stationStatus = stationStatus;
+    }
+    public void setstationCycleCount(int stationCycleCount) {
+        this.stationCycleCount = stationCycleCount;
+    }
+    public void setstationCycleDemand(int stationCycleDemand) {
+        this.stationCycleDemand = stationCycleDemand;
     }
 }

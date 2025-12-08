@@ -13,6 +13,9 @@
             android:id="@+id/sm_redistribution"
             android:title="Redistribution" />
         <item
+            android:id="@+id/sm_distribution"
+            android:title="@string/cycle_distribution" />
+        <item
             android:id="@+id/sm_user_support"
             android:title="User Report" />
         <item

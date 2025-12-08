@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="16dp"
+    android:paddingEnd="16dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="16dp"
+    android:background="@color/white">
+
+    <!-- Location Pin Icon (Straight) -->
+    <ImageView
+        android:id="@+id/station_pin_icon"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:src="@drawable/ic_place"
+        android:tint="#0ABDE3"
+        android:contentDescription="@string/bicycle_location"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="@id/demand_input" />
+
+    <!-- Station Name -->
+    <TextView
+        android:id="@+id/station_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="8dp"
+        android:text="Station Name"
+        android:textColor="@color/black"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toEndOf="@id/station_pin_icon"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/demand_input" />
+
+    <!-- Station ID -->
+    <TextView
+        android:id="@+id/station_id"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="8dp"
+        android:text="Station_0"
+        android:textColor="@color/grey_500"
+        android:textSize="12sp"
+        app:layout_constraintStart_toEndOf="@id/station_pin_icon"
+        app:layout_constraintTop_toBottomOf="@id/station_name"
+        app:layout_constraintEnd_toStartOf="@id/demand_input" />
+
+    <!-- Enter Cycle Demand Input Field -->
+    <EditText
+        android:id="@+id/demand_input"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:hint="Enter Cycle Demand"
+        android:inputType="number"
+        android:textSize="14sp"
+        android:textColor="@color/black"
+        android:textColorHint="@color/grey_500"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:background="@drawable/edittext_cycle_demand_border"
+        android:gravity="end"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- Divider Line -->
+    <View
+        android:id="@+id/divider"
+        android:layout_width="0dp"
+        android:layout_height="1dp"
+        android:layout_marginTop="12dp"
+        android:background="@color/grey_600"
+        app:layout_constraintTop_toBottomOf="@id/demand_input"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

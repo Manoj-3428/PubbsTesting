@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    tools:context=".ScanQRUnlock">
+
+    <!-- Toolbar -->
+    <include
+        android:id="@+id/include"
+        layout="@layout/toolbar" />
+
+    <!-- Scrollable content -->
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/include"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="@dimen/twenty_four_dp">
+
+            <!-- QR Scanner -->
+            <com.journeyapps.barcodescanner.CompoundBarcodeView
+                android:id="@+id/compoundBarcodeView"
+                android:layout_width="375dp"
+                android:layout_height="274dp" />
+
+            <!-- Instructions -->
+            <TextView
+                android:id="@+id/instruction"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/qr_instruction"
+                android:layout_marginTop="@dimen/sixteen_dp" />
+
+            <!-- Manual code input -->
+            <EditText
+                android:id="@+id/tv_barcode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter code manually"
+                android:layout_marginTop="@dimen/sixteen_dp"
+                android:gravity="center" />
+
+            <!-- Buttons -->
+            <Button
+                android:id="@+id/connectBtn"
+                android:layout_width="349dp"
+                android:layout_height="51dp"
+                android:layout_marginTop="@dimen/sixteen_dp"
+                android:background="@drawable/btn_blue"
+                android:text="Connect Lock"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/openLockBtn"
+                android:layout_width="357dp"
+                android:layout_height="49dp"
+                android:layout_marginTop="@dimen/eight_dp"
+                android:background="@drawable/btn_blue"
+                android:enabled="false"
+
+                android:text="Open Lock"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/endRideBtn"
+                android:layout_width="364dp"
+                android:layout_height="43dp"
+                android:layout_marginTop="@dimen/eight_dp"
+                android:background="@drawable/btn_blue"
+                android:enabled="false"
+
+                android:text="End Ride"
+                android:textColor="@color/white" />
+
+            <Button
+                android:id="@+id/endRideAuto"
+                android:layout_width="354dp"
+                android:layout_height="40dp"
+                android:layout_marginTop="@dimen/eight_dp"
+                android:background="@drawable/btn_blue"
+                android:text="END RIDE AUTO"
+                android:textColor="@color/white" />
+
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

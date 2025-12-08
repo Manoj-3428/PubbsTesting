@@ -28,8 +28,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -46,9 +44,9 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.MutableData;
+import com.google.firebase.database.Transaction;
 import com.google.firebase.database.ValueEventListener;
-
-import org.w3c.dom.Text;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
@@ -114,23 +112,17 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
         }
         addBicycleBtn.setOnClickListener(this);
 
-        //Set up Barcode Detector
         detector = new BarcodeDetector.Builder(this).setBarcodeFormats(Barcode.QR_CODE).build();
 
-        //Set camera source
         cameraSource = new CameraSource.Builder(this, detector)
                 .setRequestedPreviewSize(1024, 768)
                 .setRequestedFps(25f)
                 .setAutoFocusEnabled(true)
                 .build();
 
-
-        //Creating Detector callback function
         detector.setProcessor(new Detector.Processor<Barcode>() {
             @Override
-            public void release() {
-
-            }
+            public void release() { }
 
             @Override
             public void receiveDetections(Detector.Detections<Barcode> detections) {
@@ -139,41 +131,21 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
                     Log.d(TAG, "data: " + sparseArray.valueAt(0).displayValue);
                     setCode(sparseArray.valueAt(0).displayValue);
                 }
-
             }
         });
         surfaceView.getHolder().addCallback(new SurfaceHolder.Callback2() {
-            @Override
-            public void surfaceRedrawNeeded(SurfaceHolder holder) {
-
-            }
-
-
-
-            @Override
-
-            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override public void surfaceRedrawNeeded(SurfaceHolder holder) { }
+            @Override @RequiresApi(api = Build.VERSION_CODES.M)
             public void surfaceCreated(SurfaceHolder holder) {
                 try {
                     if (checkSelfPermission(Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
                         requestPermissions(new String[]{Manifest.permission.CAMERA}, MY_CAMERA_REQUEST_CODE);
                     }
                     cameraSource.start(holder);
-                } catch (Exception ignored) {
-
-                }
-
+                } catch (Exception ignored) { }
             }
-
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-
-            }
-
-            @Override
-            public void surfaceDestroyed(SurfaceHolder holder) {
-                cameraSource.stop();
-            }
+            @Override public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { }
+            @Override public void surfaceDestroyed(SurfaceHolder holder) { cameraSource.stop(); }
         });
     }
 
@@ -207,44 +179,6 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
                 barcodeText.setError("Scan was not properly done");
             }
         }
-        else {
-            // Optional: Handle unknown view clicks if needed
-        }
-
-//        switch (v.getId()) {
-//            case R.id.back_button:
-//                finish();
-//                break;
-//            case R.id.flash_button:
-//                if (!flashmode) {
-//                    flash.setImageResource(R.drawable.ic_flash_off_white);
-//                    flashOnButton();
-//                } else {
-//                    flash.setImageResource(R.drawable.ic_flash_on_white);
-//                    flashOnButton();
-//                }
-//                break;
-//            case R.id.add_bicycle:
-//                if (!(barcodeText.getText().toString().isEmpty()
-//                        || barcodeText.getText().toString().trim().equalsIgnoreCase("Enter code manually"))) {
-//                    if (status.equals("ADD")) {
-//                        Bicycle bicycle = new Bicycle(code, code.replaceAll(":", ""), areaId, stationName, stationId, "active", "100","0","0");//, 21); //for quectel cycleOperation is important to check--Parita
-//                        showDialog("Lock Type", "Please enter the type of lock that is been used");
-//                        /*databaseReference = FirebaseDatabase.getInstance().getReference();
-//                        databaseReference
-//                                .child(Objects.requireNonNull(sharedPreferences.getString("organisationName", null)).replaceAll(" ", ""))
-//                                .child("Bicycle")
-//                                .child(code.replaceAll(":", ""))
-//                                .setValue(bicycle);*/
-//                        //finish();
-//                    } else {
-//                        checkBicycle(code.replaceAll(":", ""));
-//                    }
-//                } else {
-//                    barcodeText.setError("Scan was not properly done");
-//                }
-//                break;
-//        }
     }
 
     private void setCode(String code) {
@@ -254,13 +188,11 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
 
     private static Camera getCamera(@NonNull CameraSource cameraSource) {
         Field[] declaredFields = CameraSource.class.getDeclaredFields();
-
         for (Field field : declaredFields) {
             if (field.getType() == Camera.class) {
                 field.setAccessible(true);
                 try {
-                    Camera camera = (Camera) field.get(cameraSource);
-                    return camera;
+                    return (Camera) field.get(cameraSource);
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
@@ -278,17 +210,9 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
                 param.setFlashMode(!flashmode ? Camera.Parameters.FLASH_MODE_TORCH : Camera.Parameters.FLASH_MODE_OFF);
                 camera.setParameters(param);
                 flashmode = !flashmode;
-                /*
-                if(flashmode){
-                    showToast("Flash Switched ON");
-                }
-                else {
-                    showToast("Flash Switched Off");
-                }*/
             } catch (Exception e) {
                 e.printStackTrace();
             }
-
         }
     }
 
@@ -306,46 +230,34 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
         }
     }
 
-    //if the user permits to access the location of the device then it
-    // will move forward and do rest part of the code, otherwise show permission failed msg in the Log
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        Log.d(TAG, "onRequestPermissionsResult: called.");
         mLocationPermissionsGranted = false;
-
         if (requestCode == LOCATION_PERMISSION_REQUEST_CODE) {
             if (grantResults.length > 0) {
                 for (int grantResult : grantResults) {
                     if (grantResult != PackageManager.PERMISSION_GRANTED) {
                         mLocationPermissionsGranted = false;
-                        Log.d(TAG, "onRequestPermissionsResult: permission failed");
                         return;
                     }
                 }
-                Log.d(TAG, "onRequestPermissionsResult: permission granted");
                 mLocationPermissionsGranted = true;
             }
         }
     }
 
-    //getting the devices current location
     private void getDeviceLocation() {
-        Log.d(TAG, "getDeviceLocation: getting the devices current location");
         mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getApplicationContext());
         try {
             if (mLocationPermissionsGranted) {
                 final Task location = mFusedLocationProviderClient.getLastLocation();
                 location.addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Log.d(TAG, "onComplete: found location!");
                         Location currentLocation = (Location) task.getResult();
                         LatLng coordinates = new LatLng(Objects.requireNonNull(currentLocation).getLatitude(), currentLocation.getLongitude());
                         latitude = coordinates.latitude;
                         longitude = coordinates.longitude;
-                        Log.d(TAG, "Device location: " + latitude + "\t" + longitude);
-                    } else {
-                        Log.d(TAG, "onComplete: current location is null");
                     }
                 });
             }
@@ -354,17 +266,13 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
         }
     }
 
-    //This section first checks whether the particular bleAddress/lockId is present in the bicycle or not. if present then remove the details of the lock from Bicycle node of the organisation and if already created or create a node called RepairBicycle and store the data inside that node
     private void checkBicycle(String code) {
         dbRemoveBicycle = FirebaseDatabase.getInstance().getReference(Objects.requireNonNull(sharedPreferences.getString("organisationName", "no_data")).replaceAll(" ", "") + "/Bicycle");
         dbCheckBicycle = FirebaseDatabase.getInstance().getReference(Objects.requireNonNull(sharedPreferences.getString("organisationName", "no_data")).replaceAll(" ", "") + "/Bicycle");
         dbCheckBicycle.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                //code to be written
+            @Override public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 for (DataSnapshot i : dataSnapshot.getChildren()) {
                     if (Objects.requireNonNull(i.getKey()).equals(code)) {
-                        Log.d(TAG, "Bicycle is present: " + code);
                         adminId = sharedPreferences.getString("admin_id", "null");
                         mobile = sharedPreferences.getString("mobileValue", "null");
                         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -380,15 +288,10 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
                     }
                 }
             }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-
-            }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
         });
     }
 
-    //This message dialog is fired when the user clicks on the next button, the user is given an edit text to type in the type of lock once the user has clicked tick button
     private void showDialog(String heading, String details) {
         TextView title, message;
         EditText data;
@@ -404,7 +307,7 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
         data = dialog.findViewById(R.id.data);
         positiveButton = dialog.findViewById(R.id.positive);
         positiveButton.setOnClickListener(v -> {
-            Bicycle bicycle = new Bicycle(code, code.replaceAll(":", ""), areaId, stationName, stationId, "active","100","0","0");//, 21); //for quectel cycleOperation is important to check--Parita
+            Bicycle bicycle = new Bicycle(code, code.replaceAll(":", ""), areaId, stationName, stationId, "active","100","0","0");
             if (!TextUtils.isEmpty(data.getText().toString())) {
                 bicycle.setType(data.getText().toString().trim());
                 databaseReference = FirebaseDatabase.getInstance().getReference();
@@ -413,12 +316,41 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
                         .child("Bicycle")
                         .child(code.replaceAll(":", ""))
                         .setValue(bicycle).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        Toast.makeText(AddOrRemoveBicycle.this, "Data inserted Successfully", Toast.LENGTH_SHORT).show();
-                        dialog.dismiss();
-                    }
-                });
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                Toast.makeText(AddOrRemoveBicycle.this, "Data inserted Successfully", Toast.LENGTH_SHORT).show();
+                                dialog.dismiss();
+
+                                // ✅ Increment stationCycleCount
+                                DatabaseReference stationRef = FirebaseDatabase.getInstance().getReference()
+                                        .child(sharedPreferences.getString("organisationName", "").replaceAll(" ", ""))
+                                        .child("Station")
+                                        .child(stationId)
+                                        .child("stationCycleCount");
+
+                                stationRef.runTransaction(new Transaction.Handler() {
+                                    @NonNull
+                                    @Override
+                                    public Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                                        Integer currentValue = currentData.getValue(Integer.class);
+                                        if (currentValue == null) {
+                                            currentData.setValue(1);
+                                        } else {
+                                            currentData.setValue(currentValue + 1);
+                                        }
+                                        return Transaction.success(currentData);
+                                    }
+                                    @Override
+                                    public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                                        if (error == null && committed) {
+                                            Log.d("AddBicycle", "stationCycleCount incremented");
+                                        } else {
+                                            Log.e("AddBicycle", "Failed to update stationCycleCount", error != null ? error.toException() : null);
+                                        }
+                                    }
+                                });
+                            }
+                        });
             } else {
                 Toast.makeText(AddOrRemoveBicycle.this, "Please do not enter blank field", Toast.LENGTH_SHORT).show();
             }
