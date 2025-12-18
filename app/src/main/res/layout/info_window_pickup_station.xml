@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="12dp"
+    android:elevation="4dp">
+
+    <!-- Station Name -->
+    <TextView
+        android:id="@+id/tv_station_name_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Station Name"
+        android:textSize="12sp"
+        android:textColor="@color/grey_600"
+        android:textStyle="normal" />
+
+    <TextView
+        android:id="@+id/tv_station_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Station Name"
+        android:textSize="14sp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        android:layout_marginTop="4dp" />
+
+    <TextView
+        android:id="@+id/tv_station_id_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Station ID"
+        android:textSize="12sp"
+        android:textColor="@color/grey_600"
+        android:textStyle="normal"
+        android:layout_marginTop="8dp" />
+
+    <TextView
+        android:id="@+id/tv_station_id"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Station ID"
+        android:textSize="14sp"
+        android:textColor="@android:color/black"
+        android:textStyle="bold"
+        android:layout_marginTop="4dp" />
+
+    <!-- Pick Up Button -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/btn_pickup_info_window"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/directions_bike"
+            android:tint="@android:color/white"
+            android:layout_marginEnd="8dp" />
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:src="@drawable/up_arrow"
+            android:layout_marginEnd="8dp" />
+
+        <TextView
+            android:id="@+id/tv_pickup_button_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pick Up Station"
+            android:textColor="@android:color/white"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</LinearLayout>
+

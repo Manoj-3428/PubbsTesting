@@ -168,7 +168,7 @@
     <string name="cycle_low_battery">Bicycle Low Battery</string>
     <string name="reported_cycles">Reported Bicycle</string>
     <string name="all_bicycles">All Bicycles</string>
-    <string name="google_maps_key">AIzaSyBN7g6pF8Vb57xZF6n3HvVwBkK8iBAKFpU</string>
+    <string name="google_maps_key">AIzaSyCv2efqVWc7ju_Tdn01pnLSCiPoLSH00yQ</string>
     <string name="tutorial_1_title">Locate an Area</string>
     <string name="tutorial_1_desc">Add twelve points to create a PUBBS area inside the map.</string>
     <string name="tutorial_2_title">Add new Station</string>
