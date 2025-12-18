@@ -256,8 +256,8 @@ public class Redistribution extends AppCompatActivity {
             return;
         }
         
-        // Simple confirmation dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        // Show confirmation dialog directly
+        AlertDialog.Builder builder = new AlertDialog.Builder(Redistribution.this);
         builder.setTitle("Confirm")
                 .setMessage("Do you want to save the cycle demand?")
                 .setPositiveButton("Confirm", (dialog, which) -> {
@@ -438,6 +438,37 @@ public class Redistribution extends AppCompatActivity {
             this.name = name;
             this.count = count;
             this.demand = demand;
+        }
+    }
+    
+    /**
+     * Helper method to safely get integer value from Firebase DataSnapshot
+     * Handles String, Long, and Integer types
+     */
+    private int getIntValue(DataSnapshot snapshot) {
+        if (snapshot == null || !snapshot.exists()) {
+            return 0;
+        }
+        
+        Object value = snapshot.getValue();
+        if (value == null) {
+            return 0;
+        }
+        
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof Long) {
+            return ((Long) value).intValue();
+        } else if (value instanceof String) {
+            try {
+                return Integer.parseInt((String) value);
+            } catch (NumberFormatException e) {
+                Log.e("Redistribution", "Error parsing value as integer: " + value, e);
+                return 0;
+            }
+        } else {
+            Log.w("Redistribution", "Unexpected type for value: " + value.getClass().getName());
+            return 0;
         }
     }
 }

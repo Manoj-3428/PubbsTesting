@@ -44,7 +44,7 @@
                 android:layout_marginEnd="8dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/light_blue_100">
+                app:cardBackgroundColor="#E8F5E9">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -72,7 +72,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_marginStart="8dp"
-                            android:src="@drawable/ic_pin_orange" />
+                            android:src="@drawable/ic_pin_green" />
                     </LinearLayout>
 
                     <TextView
@@ -94,7 +94,7 @@
                 android:layout_marginStart="8dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="2dp"
-                app:cardBackgroundColor="@color/light_blue_100">
+                app:cardBackgroundColor="#FFEBEE">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -122,7 +122,7 @@
                             android:layout_width="24dp"
                             android:layout_height="24dp"
                             android:layout_marginStart="8dp"
-                            android:src="@drawable/ic_pin_green" />
+                            android:src="@drawable/ic_pin_red" />
                     </LinearLayout>
 
                     <TextView
@@ -144,6 +144,40 @@
         android:layout_above="@id/redistribution_finished_btn">
 
         <include layout="@layout/map_layout_content" />
+        
+        <!-- Loading Overlay -->
+        <RelativeLayout
+            android:id="@+id/loading_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#80000000"
+            android:visibility="gone">
+            
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@android:color/white"
+                android:padding="24dp"
+                android:elevation="8dp">
+                
+                <ProgressBar
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginBottom="12dp"
+                    android:indeterminateTint="@color/colorPrimary" />
+                
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Preparing route for you"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/black" />
+            </LinearLayout>
+        </RelativeLayout>
     </FrameLayout>
 
     <!-- Redistribution Finished Button -->

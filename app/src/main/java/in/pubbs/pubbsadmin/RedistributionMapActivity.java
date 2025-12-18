@@ -12,6 +12,7 @@ import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
@@ -86,6 +87,10 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
     private ImageView backButton;
     private TextView tvPickupStopsCount;
     private TextView tvDropStopsCount;
+    
+    // Loading overlay
+    private View loadingOverlay;
+    private boolean isRouteLoading = false;
     
     // Distance cache: Store road distances between station pairs to avoid repeated API calls
     private Map<String, Double> roadDistanceCache = new HashMap<>();
@@ -202,6 +207,7 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         backButton = findViewById(R.id.iv_back);
         tvPickupStopsCount = findViewById(R.id.tv_pickup_stops_count);
         tvDropStopsCount = findViewById(R.id.tv_drop_stops_count);
+        loadingOverlay = findViewById(R.id.loading_overlay);
         
         toolbarTitle.setText("Area Manager");
         backButton.setOnClickListener(v -> onBackPressed());
@@ -320,15 +326,13 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                 }
                 
                 // After fetching, start pre-calculating road distances, then calculate route
-                // CRITICAL ORDER: Draw polyline FIRST, then markers to ensure markers appear on top
                 updateRouteSummaryCards();
                 
-                // Start pre-calculating road distances asynchronously (non-blocking)
-                preCalculateRoadDistances();
+                // Show loading overlay
+                showLoadingOverlay();
                 
-                // Calculate initial route (will use cached road distances if available, otherwise straight-line)
-                calculateAndDrawRoute(); // Draws polyline first with very low z-index (-10.0f)
-                displayStationsOnMap(); // Draws markers after polyline (markers render in separate layer above polylines)
+                // Start pre-calculating road distances and wait for enough to be cached before calculating route
+                preCalculateRoadDistancesAndCalculateRoute();
             }
             
             @Override
@@ -351,6 +355,12 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         stationMarkers.clear();
         selectedMarker = null; // Reset selected marker
         
+        // Create a map to quickly find station order in route
+        Map<String, Integer> stationOrderMap = new HashMap<>();
+        for (int i = 0; i < currentRoute.size(); i++) {
+            stationOrderMap.put(currentRoute.get(i).stationId, i + 1); // 1-based order
+        }
+        
         // Get the route to identify starting station
         StationData startingStation = currentRoute.isEmpty() ? null : currentRoute.get(0);
         
@@ -360,23 +370,29 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             
             BitmapDescriptor icon;
             String title;
+            int orderNumber = -1; // -1 means not in route
             
-            // Check if this is the starting station
-            boolean isStartingStation = (startingStation != null && 
-                    startingStation.stationId.equals(station.stationId));
+            // Find the order of this station in the route
+            if (stationOrderMap.containsKey(station.stationId)) {
+                orderNumber = stationOrderMap.get(station.stationId);
+            }
             
+            // Color scheme: Pickup = GREEN, Drop = RED
             if ("pickup".equals(station.stationType)) {
-                if (isStartingStation) {
-                    // Red marker for starting pickup station
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+                // Green marker for pickup stations
+                if (orderNumber > 0) {
+                    icon = createMarkerWithNumber(BitmapDescriptorFactory.HUE_GREEN, orderNumber);
                 } else {
-                    // Orange default map marker for other pickup stations
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE);
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
                 }
                 title = station.stationName + "\n" + station.cyclesToMove + " Cycles To Pick";
             } else if ("drop".equals(station.stationType)) {
-                // Green default map marker for drop stations
-                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+                // Red marker for drop stations
+                if (orderNumber > 0) {
+                    icon = createMarkerWithNumber(BitmapDescriptorFactory.HUE_RED, orderNumber);
+                } else {
+                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+                }
                 title = station.stationName + "\n" + station.cyclesToMove + " Cycles To Drop";
             } else {
                 // Skip stations with no redistribution needed
@@ -401,25 +417,95 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
     }
     
     /**
+     * Create a custom marker icon with a number label on top
+     * @param hue The color hue for the marker (e.g., HUE_RED, HUE_GREEN)
+     * @param number The order number to display on top of the marker
+     * @return BitmapDescriptor for the custom marker
+     */
+    private BitmapDescriptor createMarkerWithNumber(float hue, int number) {
+        // Create a larger marker bitmap for better visibility
+        int width = 150;
+        int height = 150;
+        Bitmap markerBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(markerBitmap);
+        
+        // Get marker color
+        int markerColor = Color.HSVToColor(new float[]{hue, 1.0f, 1.0f});
+        
+        // Draw the marker shape (pin shape)
+        Paint markerPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        markerPaint.setColor(markerColor);
+        markerPaint.setStyle(Paint.Style.FILL);
+        
+        // Draw pin body (circle at top) - larger for better visibility
+        float centerX = width / 2f;
+        float topCircleY = 45f;
+        float radius = 40f; // Increased radius for larger circle
+        canvas.drawCircle(centerX, topCircleY, radius, markerPaint);
+        
+        // Draw pin point (triangle at bottom)
+        android.graphics.Path path = new android.graphics.Path();
+        path.moveTo(centerX, topCircleY + radius); // Top of triangle
+        path.lineTo(centerX - 22f, height - 8f); // Bottom left
+        path.lineTo(centerX + 22f, height - 8f); // Bottom right
+        path.close();
+        canvas.drawPath(path, markerPaint);
+        
+        // Draw white border around pin circle for better visibility
+        Paint borderPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        borderPaint.setColor(Color.WHITE);
+        borderPaint.setStyle(Paint.Style.STROKE);
+        borderPaint.setStrokeWidth(5f);
+        canvas.drawCircle(centerX, topCircleY, radius, borderPaint);
+        
+        // Draw number in the center of the circle with black color
+        String numberText = String.valueOf(number);
+        
+        // Create text paint with black color
+        Paint textPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        textPaint.setColor(Color.BLACK);
+        textPaint.setTextSize(50f); // Larger text size
+        textPaint.setTypeface(Typeface.DEFAULT_BOLD);
+        textPaint.setTextAlign(Paint.Align.CENTER);
+        textPaint.setStyle(Paint.Style.FILL);
+        
+        // Calculate text position to be perfectly centered in the circle
+        // The text baseline should be at the vertical center of the circle
+        float textY = topCircleY - ((textPaint.descent() + textPaint.ascent()) / 2);
+        canvas.drawText(numberText, centerX, textY, textPaint);
+        
+        return BitmapDescriptorFactory.fromBitmap(markerBitmap);
+    }
+    
+    /**
      * Update marker icon to highlight or reset it
      */
     private void updateMarkerIcon(Marker marker, StationData station, boolean highlight) {
         BitmapDescriptor icon;
         float alpha = highlight ? 1.0f : 1.0f;
         
-        // Get starting station to check
-        StationData startingStation = currentRoute.isEmpty() ? null : currentRoute.get(0);
-        boolean isStartingStation = (startingStation != null && 
-                startingStation.stationId.equals(station.stationId));
+        // Find the order of this station in the route
+        int orderNumber = -1;
+        for (int i = 0; i < currentRoute.size(); i++) {
+            if (currentRoute.get(i).stationId.equals(station.stationId)) {
+                orderNumber = i + 1; // 1-based order
+                break;
+            }
+        }
         
+        // Color scheme: Pickup = GREEN, Drop = RED
         if ("pickup".equals(station.stationType)) {
-            if (isStartingStation) {
-                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+            if (orderNumber > 0) {
+                icon = createMarkerWithNumber(BitmapDescriptorFactory.HUE_GREEN, orderNumber);
             } else {
-                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE);
+                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
             }
         } else if ("drop".equals(station.stationType)) {
-            icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
+            if (orderNumber > 0) {
+                icon = createMarkerWithNumber(BitmapDescriptorFactory.HUE_RED, orderNumber);
+            } else {
+                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
+            }
         } else {
             return; // Skip
         }
@@ -439,10 +525,51 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
     }
     
     /**
-     * Recalculate route using road distances (once they're cached)
-     * This is called after initial route calculation to improve it with real road distances
+     * Show loading overlay with "Preparing route for you" message
      */
+    private void showLoadingOverlay() {
+        if (loadingOverlay != null) {
+            isRouteLoading = true;
+            runOnUiThread(() -> {
+                loadingOverlay.setVisibility(View.VISIBLE);
+                // Hide redistribution button during loading
+                if (redistributionFinishedBtn != null) {
+                    redistributionFinishedBtn.setVisibility(View.GONE);
+                }
+            });
+        }
+    }
+    
+    /**
+     * Hide loading overlay
+     */
+    private void hideLoadingOverlay() {
+        if (loadingOverlay != null && isRouteLoading) {
+            isRouteLoading = false;
+            runOnUiThread(() -> {
+                loadingOverlay.setVisibility(View.GONE);
+                // Show redistribution button when loading is done
+                if (redistributionFinishedBtn != null) {
+                    redistributionFinishedBtn.setVisibility(View.VISIBLE);
+                }
+            });
+        }
+    }
+    
+    /**
+     * Recalculate route using road distances (once they're cached)
+     * NOTE: This method is currently DISABLED because we want to keep the same station order
+     * and only update the path visualization, not change the route order.
+     * The user requirement is: "path should change the way not the order of the stations"
+     */
+    @Deprecated
     private void recalculateRouteWithRoadDistances() {
+        // DISABLED: We don't want to recalculate the route and change station order
+        // The path visualization will update automatically as road paths are fetched
+        Log.d(TAG, "Route recalculation disabled - keeping original route order, only updating path visualization");
+        return;
+        
+        /* DISABLED CODE - keeping for reference
         if (pickupStations.isEmpty() || dropStations.isEmpty()) {
             return;
         }
@@ -472,6 +599,7 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         redrawRoute(route);
         
         Log.d(TAG, "Route recalculated with road distances");
+        */
     }
     
     /**
@@ -485,6 +613,8 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         routePolylines.clear();
         
         if (route.size() >= 2) {
+            Log.d(TAG, "Redrawing route with " + route.size() + " stations");
+            
             // Draw route with available cached paths or straight lines (non-blocking)
             List<LatLng> initialPathPoints = new ArrayList<>();
             
@@ -492,14 +622,31 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                 StationData fromStation = route.get(i);
                 StationData toStation = route.get(i + 1);
                 
+                // For first segment, always add the source station coordinate
+                if (i == 0) {
+                    initialPathPoints.add(new LatLng(fromStation.latitude, fromStation.longitude));
+                }
+                
                 // Use cached path if available, otherwise straight line (non-blocking)
                 List<LatLng> segmentPath = getRoadPath(fromStation, toStation);
                 
-                if (i == 0) {
-                    initialPathPoints.addAll(segmentPath);
+                // Add segment path points
+                // For segments after the first, skip the first point to avoid duplicates
+                int startIndex = (i == 0) ? 0 : 1;
+                for (int j = startIndex; j < segmentPath.size(); j++) {
+                    initialPathPoints.add(segmentPath.get(j));
+                }
+                
+                // Always ensure the destination station coordinate is at the end of each segment
+                LatLng destStation = new LatLng(toStation.latitude, toStation.longitude);
+                if (initialPathPoints.isEmpty()) {
+                    initialPathPoints.add(destStation);
                 } else {
-                    if (segmentPath.size() > 1) {
-                        initialPathPoints.addAll(segmentPath.subList(1, segmentPath.size()));
+                    LatLng lastPoint = initialPathPoints.get(initialPathPoints.size() - 1);
+                    double distance = calculateDistance(lastPoint.latitude, lastPoint.longitude,
+                            destStation.latitude, destStation.longitude);
+                    if (distance > 10) {
+                        initialPathPoints.add(destStation);
                     }
                 }
             }
@@ -515,7 +662,16 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             Polyline polyline = googleMap.addPolyline(polylineOptions);
             routePolylines.add(polyline);
             
-            Log.d(TAG, "Route redrawn with " + route.size() + " stations");
+            Log.d(TAG, "Route redrawn with " + route.size() + " stations, " + 
+                  initialPathPoints.size() + " path points (includes station coordinates)");
+            
+            // Log route for debugging
+            StringBuilder routeStr = new StringBuilder("Route: ");
+            for (int i = 0; i < route.size(); i++) {
+                routeStr.append(route.get(i).stationId);
+                if (i < route.size() - 1) routeStr.append(" -> ");
+            }
+            Log.d(TAG, routeStr.toString());
             
             // Asynchronously fetch and update with actual road paths
             fetchRoadPathsAndUpdatePolyline(route, polyline);
@@ -531,6 +687,7 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         
         if (pickupStations.isEmpty() || dropStations.isEmpty()) {
             Log.d(TAG, "No pickup or drop stations to connect");
+            hideLoadingOverlay();
             return;
         }
         
@@ -543,6 +700,7 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         
         if (route.isEmpty()) {
             Log.w(TAG, "No valid route found!");
+            hideLoadingOverlay();
             Toast.makeText(this, "No valid route found that satisfies capacity constraints!", 
                     Toast.LENGTH_SHORT).show();
             return;
@@ -561,31 +719,21 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             currentRoute = new ArrayList<>(route); // Update stored route
         }
         
-        // Draw polyline connecting the route - initially with straight lines or cached paths
-        // Then asynchronously fetch and update with actual road paths
+        // Don't draw initial polyline - wait for real road paths
+        // Only draw when road paths are fetched
         if (route.size() >= 2) {
-            // First, draw route with available cached paths or straight lines (non-blocking)
-            List<LatLng> initialPathPoints = new ArrayList<>();
+            Log.d(TAG, "Preparing route with " + route.size() + " stations - fetching road paths...");
             
-            for (int i = 0; i < route.size() - 1; i++) {
-                StationData fromStation = route.get(i);
-                StationData toStation = route.get(i + 1);
-                
-                // Use cached path if available, otherwise straight line (non-blocking)
-                List<LatLng> segmentPath = getRoadPath(fromStation, toStation);
-                
-                if (i == 0) {
-                    initialPathPoints.addAll(segmentPath);
-                } else {
-                    if (segmentPath.size() > 1) {
-                        initialPathPoints.addAll(segmentPath.subList(1, segmentPath.size()));
-                    }
-                }
+            // Log route for debugging
+            StringBuilder routeStr = new StringBuilder("Route: ");
+            for (int i = 0; i < route.size(); i++) {
+                routeStr.append(route.get(i).stationId);
+                if (i < route.size() - 1) routeStr.append(" -> ");
             }
+            Log.d(TAG, routeStr.toString());
             
-            // Create initial polyline (will be updated when road paths are fetched)
+            // Create empty polyline initially (will be updated when road paths are fetched)
             PolylineOptions polylineOptions = new PolylineOptions()
-                    .addAll(initialPathPoints)
                     .color(Color.parseColor("#1976D2"))
                     .width(12f)
                     .geodesic(false)
@@ -594,11 +742,11 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             Polyline polyline = googleMap.addPolyline(polylineOptions);
             routePolylines.add(polyline);
             
-            Log.d(TAG, "Initial route drawn with " + route.size() + " stations, " + 
-                  initialPathPoints.size() + " path points (cached/straight-line)");
-            
             // Now asynchronously fetch actual road paths for all segments and update polyline
+            // Loading overlay will be hidden when all paths are fetched
             fetchRoadPathsAndUpdatePolyline(route, polyline);
+        } else {
+            hideLoadingOverlay();
         }
     }
     
@@ -786,7 +934,7 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             
             for (StationData drop : availableDrops) {
                 if (routeState.canVisitDrop(drop)) {
-                    // Use road distance from Directions API instead of straight-line distance
+                    // Use real road distance (from cache) for accurate route calculation
                     double distance = getRoadDistance(currentStation, drop);
                     if (distance < minDistance) {
                         minDistance = distance;
@@ -814,7 +962,8 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         double minDistance = Double.MAX_VALUE;
         
         for (StationData candidate : candidates) {
-            // Use road distance from Directions API instead of straight-line distance
+            // Use real road distance (from cache) for accurate route calculation
+            // Falls back to straight-line if not cached yet
             double distance = getRoadDistance(from, candidate);
             if (distance < minDistance) {
                 minDistance = distance;
@@ -851,21 +1000,17 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                 ? from.stationId + "_" + to.stationId 
                 : to.stationId + "_" + from.stationId;
         
-        // Check cache first
+        // Check cache first - use real road distance if available
         if (roadDistanceCache.containsKey(cacheKey)) {
-            Log.d(TAG, "Using cached road distance: " + from.stationId + " -> " + to.stationId + 
-                  " = " + roadDistanceCache.get(cacheKey) + " meters");
             return roadDistanceCache.get(cacheKey);
         }
         
-        // For now, use straight-line distance to avoid blocking main thread
-        // TODO: Pre-calculate road distances asynchronously when stations are loaded
+        // If not cached, use straight-line distance as fallback
+        // This should rarely happen if pre-calculation is working properly
         double straightDistance = calculateDistance(from.latitude, from.longitude, 
                 to.latitude, to.longitude);
-        Log.d(TAG, "Using straight-line distance (road distance not cached): " + from.stationId + 
-              " -> " + to.stationId + " = " + straightDistance + " meters");
         
-        // Start async calculation for future use (non-blocking)
+        // Start async calculation for future use (non-blocking, don't wait)
         getRoadDistanceAsync(from, to);
         
         return straightDistance;
@@ -918,9 +1063,15 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                                     Log.d(TAG, "Cached road distance: " + from.stationId + " -> " + to.stationId + 
                                           " = " + distanceInMeters + " meters (" + cached + "/" + expectedRoadDistancesCount + " cached)");
                                     
-                                    // If we've cached a significant portion, recalculate route
-                                    if (cached >= expectedRoadDistancesCount * 0.5 && roadDistanceCallback != null) {
-                                        Log.d(TAG, "50% of road distances cached, recalculating route...");
+                                    // Check if we have enough cached distances to calculate route
+                                    // Start route calculation when 60% of distances are cached
+                                    final double requiredCachePercentage = 0.6;
+                                    final int requiredCachedCount = (int) (expectedRoadDistancesCount * requiredCachePercentage);
+                                    
+                                    if (cached >= requiredCachedCount && roadDistanceCallback != null) {
+                                        Log.d(TAG, "Reached " + (int)(requiredCachePercentage * 100) + 
+                                              "% cached distances (" + cached + "/" + expectedRoadDistancesCount + 
+                                              "). Calculating route with real road distances...");
                                         runOnUiThread(() -> {
                                             if (roadDistanceCallback != null) {
                                                 roadDistanceCallback.onDistanceCached();
@@ -1113,14 +1264,26 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
     private void fetchRoadPathsAndUpdatePolyline(List<StationData> route, Polyline polyline) {
         int totalSegments = route.size() - 1;
         if (totalSegments <= 0) {
+            Log.w(TAG, "Route has " + route.size() + " stations, cannot fetch paths");
             return;
         }
         
-        Log.d(TAG, "Asynchronously fetching road paths for " + totalSegments + " route segments...");
+        Log.d(TAG, "Asynchronously fetching road paths for " + totalSegments + " route segments (" + 
+              route.size() + " stations total)...");
+        
+        // Log all stations in route
+        StringBuilder routeStr = new StringBuilder("Fetching paths for route: ");
+        for (int i = 0; i < route.size(); i++) {
+            routeStr.append(route.get(i).stationId);
+            if (i < route.size() - 1) routeStr.append(" -> ");
+        }
+        Log.d(TAG, routeStr.toString());
         
         // Store paths in an array indexed by segment position
         List<LatLng>[] segmentPaths = new List[totalSegments];
         AtomicInteger completedSegments = new AtomicInteger(0);
+        
+        Log.d(TAG, "Starting to fetch " + totalSegments + " segments for route with " + route.size() + " stations");
         
         // Fetch all segments asynchronously
         for (int i = 0; i < totalSegments; i++) {
@@ -1137,12 +1300,17 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                 segmentPaths[segmentIndex] = new ArrayList<>(roadPathCache.get(cacheKey));
                 int completed = completedSegments.incrementAndGet();
                 Log.d(TAG, "Segment " + (segmentIndex + 1) + "/" + totalSegments + " (cached): " + 
-                      fromStation.stationId + " -> " + toStation.stationId);
+                      fromStation.stationId + " -> " + toStation.stationId + 
+                      " (" + segmentPaths[segmentIndex].size() + " points)");
                 
-                if (completed == totalSegments) {
-                    // All segments complete, update polyline on UI thread
-                    runOnUiThread(() -> updatePolylineWithRoadPaths(route, polyline, segmentPaths));
-                }
+                        if (completed == totalSegments) {
+                            // All segments complete, update polyline on UI thread
+                            Log.d(TAG, "All " + totalSegments + " segments completed (from cache)! Updating polyline...");
+                            runOnUiThread(() -> {
+                                updatePolylineWithRoadPaths(route, polyline, segmentPaths);
+                                hideLoadingOverlay();
+                            });
+                        }
                 continue;
             }
             
@@ -1158,17 +1326,36 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                             if ("OK".equals(status)) {
                                 JSONArray routes = response.getJSONArray("routes");
                                 if (routes.length() > 0) {
+                                    // Use only the first route (best route) - alternatives=false ensures this
                                     JSONObject routeObj = routes.getJSONObject(0);
                                     JSONObject overviewPolyline = routeObj.getJSONObject("overview_polyline");
                                     String encodedPolyline = overviewPolyline.getString("points");
                                     List<LatLng> path = decodePolyline(encodedPolyline);
+                                    
+                                    // Ensure path includes exact station coordinates
+                                    // Add source station at the beginning if not already there
+                                    LatLng sourceStation = new LatLng(fromStation.latitude, fromStation.longitude);
+                                    if (path.isEmpty() || 
+                                        calculateDistance(path.get(0).latitude, path.get(0).longitude,
+                                                sourceStation.latitude, sourceStation.longitude) > 10) {
+                                        path.add(0, sourceStation);
+                                    }
+                                    
+                                    // Add destination station at the end if not already there
+                                    LatLng destStation = new LatLng(toStation.latitude, toStation.longitude);
+                                    if (path.isEmpty() || 
+                                        calculateDistance(path.get(path.size() - 1).latitude, 
+                                                path.get(path.size() - 1).longitude,
+                                                destStation.latitude, destStation.longitude) > 10) {
+                                        path.add(destStation);
+                                    }
                                     
                                     roadPathCache.put(cacheKey, path); // Cache it
                                     segmentPaths[segmentIndex] = path;
                                     
                                     Log.d(TAG, "Segment " + (segmentIndex + 1) + "/" + totalSegments + 
                                           " (API): " + fromStation.stationId + " -> " + toStation.stationId + 
-                                          " (" + path.size() + " points)");
+                                          " (" + path.size() + " points, includes station coordinates)");
                                 } else {
                                     Log.w(TAG, "No routes found for segment " + (segmentIndex + 1));
                                     segmentPaths[segmentIndex] = createStraightLinePath(fromStation, toStation);
@@ -1186,18 +1373,31 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                         
                         // Check if all segments are complete
                         int completed = completedSegments.incrementAndGet();
+                        Log.d(TAG, "Segment " + (segmentIndex + 1) + "/" + totalSegments + " completed. " + 
+                              completed + "/" + totalSegments + " total segments done");
                         if (completed == totalSegments) {
-                            // Update polyline on main thread
-                            runOnUiThread(() -> updatePolylineWithRoadPaths(route, polyline, segmentPaths));
+                            // All segments complete, update polyline on main thread
+                            Log.d(TAG, "All " + totalSegments + " segments completed! Updating polyline...");
+                            runOnUiThread(() -> {
+                                updatePolylineWithRoadPaths(route, polyline, segmentPaths);
+                                hideLoadingOverlay();
+                            });
                         }
                     },
                     error -> {
-                        Log.e(TAG, "API error for segment " + (segmentIndex + 1) + ": " + error.getMessage());
+                        Log.e(TAG, "API error for segment " + (segmentIndex + 1) + "/" + totalSegments + 
+                              ": " + error.getMessage() + " (" + fromStation.stationId + " -> " + toStation.stationId + ")");
                         segmentPaths[segmentIndex] = createStraightLinePath(fromStation, toStation);
                         
                         int completed = completedSegments.incrementAndGet();
+                        Log.d(TAG, "Segment " + (segmentIndex + 1) + "/" + totalSegments + " completed (error fallback). " + 
+                              completed + "/" + totalSegments + " total segments done");
                         if (completed == totalSegments) {
-                            runOnUiThread(() -> updatePolylineWithRoadPaths(route, polyline, segmentPaths));
+                            Log.d(TAG, "All " + totalSegments + " segments completed (with errors)! Updating polyline...");
+                            runOnUiThread(() -> {
+                                updatePolylineWithRoadPaths(route, polyline, segmentPaths);
+                                hideLoadingOverlay();
+                            });
                         }
                     });
             
@@ -1207,30 +1407,94 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
     
     /**
      * Update the polyline with actual road paths (called on UI thread)
+     * Ensures the path includes exact station coordinates so it touches all stations
      */
     private void updatePolylineWithRoadPaths(List<StationData> route, Polyline polyline, List<LatLng>[] segmentPaths) {
         List<LatLng> allPathPoints = new ArrayList<>();
         
+        if (route.size() < 2) {
+            Log.w(TAG, "Route has less than 2 stations, cannot draw path");
+            return;
+        }
+        
+        if (segmentPaths.length != route.size() - 1) {
+            Log.e(TAG, "Mismatch: route has " + route.size() + " stations (" + (route.size() - 1) + 
+                  " segments) but segmentPaths has " + segmentPaths.length + " segments");
+            return;
+        }
+        
+        Log.d(TAG, "Updating polyline with " + route.size() + " stations, " + segmentPaths.length + " segments");
+        
+        // Verify all segments are present
+        int missingSegments = 0;
         for (int i = 0; i < segmentPaths.length; i++) {
+            if (segmentPaths[i] == null) {
+                missingSegments++;
+                Log.w(TAG, "Segment " + i + " is null: " + route.get(i).stationId + " -> " + route.get(i + 1).stationId);
+            }
+        }
+        if (missingSegments > 0) {
+            Log.w(TAG, "Warning: " + missingSegments + " segments are null, will use fallback paths");
+        }
+        
+        for (int i = 0; i < segmentPaths.length; i++) {
+            StationData fromStation = route.get(i);
+            StationData toStation = route.get(i + 1);
+            
             List<LatLng> segmentPath = segmentPaths[i];
-            if (segmentPath == null) {
+            if (segmentPath == null || segmentPath.isEmpty()) {
                 // Fallback to straight line if segment failed
-                segmentPath = createStraightLinePath(route.get(i), route.get(i + 1));
+                Log.w(TAG, "Segment " + (i + 1) + "/" + segmentPaths.length + " is null or empty, using straight line: " + 
+                      fromStation.stationId + " -> " + toStation.stationId);
+                segmentPath = createStraightLinePath(fromStation, toStation);
             }
             
+            // For first segment, always add the source station coordinate
             if (i == 0) {
-                allPathPoints.addAll(segmentPath);
+                LatLng sourceStation = new LatLng(fromStation.latitude, fromStation.longitude);
+                allPathPoints.add(sourceStation);
+            }
+            
+            // Add the road path points
+            // For segments after the first, skip the first point to avoid duplicates
+            int startIndex = (i == 0) ? 0 : 1;
+            for (int j = startIndex; j < segmentPath.size(); j++) {
+                LatLng point = segmentPath.get(j);
+                allPathPoints.add(point);
+            }
+            
+            // Always ensure the destination station coordinate is at the end of each segment
+            LatLng destStation = new LatLng(toStation.latitude, toStation.longitude);
+            if (allPathPoints.isEmpty()) {
+                allPathPoints.add(destStation);
             } else {
-                if (segmentPath.size() > 1) {
-                    allPathPoints.addAll(segmentPath.subList(1, segmentPath.size()));
+                // Check if last point is the destination station (within 10 meters)
+                LatLng lastPoint = allPathPoints.get(allPathPoints.size() - 1);
+                double distance = calculateDistance(lastPoint.latitude, lastPoint.longitude,
+                        destStation.latitude, destStation.longitude);
+                if (distance > 10) {
+                    // Add destination station if last point is more than 10 meters away
+                    allPathPoints.add(destStation);
                 }
             }
         }
         
         // Update polyline points
-        polyline.setPoints(allPathPoints);
+        if (allPathPoints.size() > 0) {
+            polyline.setPoints(allPathPoints);
+            Log.d(TAG, "Polyline updated with road paths: " + allPathPoints.size() + " total points, " + 
+                  route.size() + " stations in route");
+        } else {
+            Log.e(TAG, "ERROR: No path points generated! Route has " + route.size() + " stations");
+        }
         
-        Log.d(TAG, "Polyline updated with road paths: " + allPathPoints.size() + " total points");
+        // Log all stations in route for debugging
+        StringBuilder routeStr = new StringBuilder("Route stations: ");
+        for (int i = 0; i < route.size(); i++) {
+            routeStr.append(route.get(i).stationId);
+            if (i < route.size() - 1) routeStr.append(" -> ");
+        }
+        Log.d(TAG, routeStr.toString());
     }
     
     /**
@@ -1256,13 +1520,31 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                         if ("OK".equals(status)) {
                             JSONArray routes = response.getJSONArray("routes");
                             if (routes.length() > 0) {
+                                // Use only the first route (best route)
                                 JSONObject route = routes.getJSONObject(0);
                                 JSONObject overviewPolyline = route.getJSONObject("overview_polyline");
                                 String encodedPolyline = overviewPolyline.getString("points");
                                 List<LatLng> path = decodePolyline(encodedPolyline);
+                                
+                                // Ensure path includes exact station coordinates
+                                LatLng sourceStation = new LatLng(from.latitude, from.longitude);
+                                if (path.isEmpty() || 
+                                    calculateDistance(path.get(0).latitude, path.get(0).longitude,
+                                            sourceStation.latitude, sourceStation.longitude) > 10) {
+                                    path.add(0, sourceStation);
+                                }
+                                
+                                LatLng destStation = new LatLng(to.latitude, to.longitude);
+                                if (path.isEmpty() || 
+                                    calculateDistance(path.get(path.size() - 1).latitude, 
+                                            path.get(path.size() - 1).longitude,
+                                            destStation.latitude, destStation.longitude) > 10) {
+                                    path.add(destStation);
+                                }
+                                
                                 roadPathCache.put(cacheKey, path);
                                 Log.d(TAG, "Cached road path: " + from.stationId + " -> " + to.stationId + 
-                                      " (" + path.size() + " points)");
+                                      " (" + path.size() + " points, includes station coordinates)");
                             }
                         } else {
                             String errorMessage = response.optString("error_message", "No error message");
@@ -1342,7 +1624,7 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
      * Pre-calculate road distances for all station pairs asynchronously
      * This will populate the cache so subsequent route calculations can use actual road distances
      */
-    private void preCalculateRoadDistances() {
+    private void preCalculateRoadDistancesAndCalculateRoute() {
         Log.d(TAG, "Pre-calculating road distances for all station pairs...");
         List<StationData> allRelevantStations = new ArrayList<>();
         allRelevantStations.addAll(pickupStations);
@@ -1352,9 +1634,17 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         expectedRoadDistancesCount = allRelevantStations.size() * (allRelevantStations.size() - 1) / 2;
         cachedRoadDistancesCount.set(0);
         
-        // Set callback to recalculate route when 50% of distances are cached
+        // Set callback to calculate route when enough distances are cached
+        // We'll start route calculation when 60% of distances are cached (good balance)
+        final double requiredCachePercentage = 0.6;
+        final int requiredCachedCount = (int) (expectedRoadDistancesCount * requiredCachePercentage);
+        
         roadDistanceCallback = () -> {
-            recalculateRouteWithRoadDistances();
+            // Calculate route when enough distances are cached
+            runOnUiThread(() -> {
+                calculateAndDrawRoute();
+                displayStationsOnMap();
+            });
         };
         
         // Calculate distances between all pairs asynchronously
@@ -1364,7 +1654,9 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                 getRoadPathAsync(allRelevantStations.get(i), allRelevantStations.get(j));
             }
         }
-        Log.d(TAG, "Started pre-calculation for " + expectedRoadDistancesCount + " station pairs");
+        Log.d(TAG, "Started pre-calculation for " + expectedRoadDistancesCount + " station pairs. " +
+              "Will calculate route when " + requiredCachedCount + " (" + 
+              (int)(requiredCachePercentage * 100) + "%) distances are cached.");
     }
     
     /**
@@ -1377,14 +1669,19 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         return path;
     }
     
-    // Calculate total distance of a route using actual road distances
+    // Calculate total distance of a route using straight-line distances (fast for optimization)
+    // Road distances are used only for final visualization
     private double calculateRouteDistance(List<StationData> route) {
         if (route.size() < 2) return 0;
         
         double totalDistance = 0;
         for (int i = 0; i < route.size() - 1; i++) {
-            // Use road distance from Directions API instead of straight-line distance
-            totalDistance += getRoadDistance(route.get(i), route.get(i + 1));
+            // Use straight-line distance for route optimization (much faster)
+            // Road distances are calculated separately for visualization
+            totalDistance += calculateDistance(
+                route.get(i).latitude, route.get(i).longitude,
+                route.get(i + 1).latitude, route.get(i + 1).longitude
+            );
         }
         return totalDistance;
     }
@@ -1408,7 +1705,7 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         
         List<StationData> improvedRoute = new ArrayList<>(route);
         boolean improved = true;
-        int maxIterations = 100; // Prevent infinite loops
+        int maxIterations = 20; // Reduced from 100 to speed up (2-opt is expensive)
         int iterations = 0;
         
         while (improved && iterations < maxIterations) {
@@ -1417,9 +1714,10 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             
             double bestDistance = calculateRouteDistance(improvedRoute);
             
-            // Try all possible 2-opt swaps
+            // Try 2-opt swaps (reduced search space for performance)
+            // Only try swaps that are likely to improve the route
             for (int i = 1; i < improvedRoute.size() - 2; i++) {
-                for (int j = i + 1; j < improvedRoute.size(); j++) {
+                for (int j = i + 2; j < improvedRoute.size() && j < i + 5; j++) { // Limit j to nearby stations
                     // Create new route with swapped segment
                     List<StationData> newRoute = twoOptSwap(improvedRoute, i, j);
                     
@@ -1428,7 +1726,7 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                         double newDistance = calculateRouteDistance(newRoute);
                         
                         // If new route is shorter and valid, use it
-                        if (newDistance < bestDistance) {
+                        if (newDistance < bestDistance * 0.99) { // Only accept if at least 1% improvement
                             improvedRoute = newRoute;
                             bestDistance = newDistance;
                             improved = true;
