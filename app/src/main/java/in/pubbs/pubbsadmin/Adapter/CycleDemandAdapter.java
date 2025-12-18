@@ -43,6 +43,14 @@ public class CycleDemandAdapter extends RecyclerView.Adapter<CycleDemandAdapter.
         holder.stationName.setText(item.getStationName());
         holder.stationId.setText(item.getStationId());
         
+        // Display cycle count
+        Integer cycleCount = item.getCycleCount();
+        if (cycleCount != null) {
+            holder.cycleCount.setText("Cycle Count: " + cycleCount);
+        } else {
+            holder.cycleCount.setText("Cycle Count: 0");
+        }
+        
         // Remove any existing TextWatcher to avoid memory leaks
         if (holder.textWatcher != null) {
             holder.demandInput.removeTextChangedListener(holder.textWatcher);
@@ -101,6 +109,7 @@ public class CycleDemandAdapter extends RecyclerView.Adapter<CycleDemandAdapter.
         ImageView stationPinIcon;
         TextView stationName;
         TextView stationId;
+        TextView cycleCount;
         EditText demandInput;
         TextWatcher textWatcher;
 
@@ -109,6 +118,7 @@ public class CycleDemandAdapter extends RecyclerView.Adapter<CycleDemandAdapter.
             stationPinIcon = itemView.findViewById(R.id.station_pin_icon);
             stationName = itemView.findViewById(R.id.station_name);
             stationId = itemView.findViewById(R.id.station_id);
+            cycleCount = itemView.findViewById(R.id.cycle_count);
             demandInput = itemView.findViewById(R.id.demand_input);
         }
     }
@@ -118,11 +128,13 @@ public class CycleDemandAdapter extends RecyclerView.Adapter<CycleDemandAdapter.
         private String stationId;
         private String stationName;
         private Integer currentDemand;
+        private Integer cycleCount;
 
-        public StationDemandItem(String stationId, String stationName, Integer currentDemand) {
+        public StationDemandItem(String stationId, String stationName, Integer currentDemand, Integer cycleCount) {
             this.stationId = stationId;
             this.stationName = stationName;
             this.currentDemand = currentDemand;
+            this.cycleCount = cycleCount;
         }
 
         public String getStationId() {
@@ -135,6 +147,10 @@ public class CycleDemandAdapter extends RecyclerView.Adapter<CycleDemandAdapter.
 
         public Integer getCurrentDemand() {
             return currentDemand;
+        }
+
+        public Integer getCycleCount() {
+            return cycleCount;
         }
     }
 }

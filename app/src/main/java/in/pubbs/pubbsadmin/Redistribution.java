@@ -18,6 +18,10 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.text.SpannableString;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.graphics.Color;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -195,32 +199,50 @@ public class Redistribution extends AppCompatActivity {
         
         cycleDemandStationList.clear();
         
+        // Optimize: Only fetch required fields - use orderBy to minimize data transfer
+        // Fetch only stationName, stationCycleCount, and stationCycleDemand
         stationRootRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // Fetching all stations from Firebase path: /<organisation>/Station/
-                // Example: /RM/Station/ or /IITPubbs/Station/
+                // Fetching only required fields from Firebase path: /<organisation>/Station/
+                // Optimized: Only accessing stationName, stationCycleCount, stationCycleDemand
                 for (DataSnapshot stationSnap : snapshot.getChildren()) {
-                    String stationId = stationSnap.getKey(); // e.g., "Station_0", "Station_1"
+                    String stationId = stationSnap.getKey();
+                    if (stationId == null) continue;
+                    
+                    // Only fetch required fields
                     String stationName = stationSnap.child("stationName").getValue(String.class);
+                    if (stationName == null) continue;
                     
-                    // EXTRACTING DEMAND VALUES:
-                    // Path being checked: /<organisation>/Station/{stationId}/stationCycleDemand
-                    // Example: /RM/Station/Station_0/stationCycleDemand
-                    // 
-                    // IMPORTANT: This field may NOT exist yet in Firebase!
-                    // - If field exists: Returns the stored Integer value
-                    // - If field doesn't exist: Returns null (will show empty input field)
-                    // - Field will be CREATED when user saves for the first time
-                    Long currentDemand = stationSnap.child("stationCycleDemand").getValue(Long.class);
-                    
-                    if (stationId != null && stationName != null) {
-                        // Convert to Integer (null if field doesn't exist in Firebase)
-                        Integer demandValue = (currentDemand != null) ? currentDemand.intValue() : null;
-                        cycleDemandStationList.add(
-                            new CycleDemandAdapter.StationDemandItem(stationId, stationName, demandValue)
-                        );
+                    // Get cycle count - handle String, Long, Integer types efficiently
+                    DataSnapshot cycleCountSnap = stationSnap.child("stationCycleCount");
+                    int cycleCount = 0;
+                    if (cycleCountSnap.exists()) {
+                        Object cycleCountValue = cycleCountSnap.getValue();
+                        if (cycleCountValue instanceof Number) {
+                            cycleCount = ((Number) cycleCountValue).intValue();
+                        } else if (cycleCountValue instanceof String) {
+                            try {
+                                cycleCount = Integer.parseInt((String) cycleCountValue);
+                            } catch (NumberFormatException e) {
+                                cycleCount = 0;
+                            }
+                        }
                     }
+                    
+                    // Get demand value (may not exist)
+                    Integer demandValue = null;
+                    DataSnapshot demandSnap = stationSnap.child("stationCycleDemand");
+                    if (demandSnap.exists()) {
+                        Object demandObj = demandSnap.getValue();
+                        if (demandObj instanceof Number) {
+                            demandValue = ((Number) demandObj).intValue();
+                        }
+                    }
+                    
+                    cycleDemandStationList.add(
+                            new CycleDemandAdapter.StationDemandItem(stationId, stationName, demandValue, cycleCount)
+                    );
                 }
                 
                 progressBar.setVisibility(View.GONE);
@@ -256,7 +278,124 @@ public class Redistribution extends AppCompatActivity {
             return;
         }
         
-        // Show confirmation dialog directly
+        // PRE-VALIDATION: Check if any station violates the <= 4 constraint for pickup/drop cycles
+        List<String> violationStations = new ArrayList<>();
+        for (CycleDemandAdapter.StationDemandItem item : cycleDemandStationList) {
+            String stationId = item.getStationId();
+            Integer cycleCount = item.getCycleCount();
+            
+            if (cycleCount != null) {
+                // Use entered demand if available, otherwise use current demand (or 0 if null)
+                Integer demand;
+                if (demandMap.containsKey(stationId)) {
+                    demand = demandMap.get(stationId);
+                } else {
+                    demand = item.getCurrentDemand();
+                    if (demand == null) {
+                        demand = 0;
+                    }
+                }
+                
+                // Calculate cycles to move (pickup or drop)
+                int cyclesToMove = Math.abs(cycleCount - demand);
+                
+                // Check constraint: cycles to move must be <= 4
+                if (cyclesToMove > 4) {
+                    String stationName = item.getStationName();
+                    violationStations.add(stationName + " (" + stationId + ")");
+                }
+            }
+        }
+        
+        // If validation failed, show error dialog
+        if (!violationStations.isEmpty()) {
+            StringBuilder errorMessage = new StringBuilder();
+            if (violationStations.size() == 1) {
+                errorMessage.append("Station ").append(violationStations.get(0))
+                        .append(" violates the constraint.\n\n");
+            } else {
+                errorMessage.append("The following stations violate the constraint:\n");
+                for (String station : violationStations) {
+                    errorMessage.append("• ").append(station).append("\n");
+                }
+                errorMessage.append("\n");
+            }
+            errorMessage.append("Pickup or drop number cannot exceed 4 cycles per station.");
+            
+            new AlertDialog.Builder(Redistribution.this)
+                    .setTitle("Constraint Violation")
+                    .setMessage(errorMessage.toString())
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        dialog.dismiss();
+                    })
+                    .show();
+            return;
+        }
+        
+        // Calculate difference between cycle count and demand for each station
+        // Use entered demand if available, otherwise use current demand
+        int totalDifference = 0;
+        for (CycleDemandAdapter.StationDemandItem item : cycleDemandStationList) {
+            String stationId = item.getStationId();
+            Integer cycleCount = item.getCycleCount();
+            
+            if (cycleCount != null) {
+                // Use entered demand if available, otherwise use current demand (or 0 if null)
+                Integer demand;
+                if (demandMap.containsKey(stationId)) {
+                    // User entered a new demand value
+                    demand = demandMap.get(stationId);
+                } else {
+                    // No new demand entered, use current demand from Firebase (or 0)
+                    demand = item.getCurrentDemand();
+                    if (demand == null) {
+                        demand = 0;
+                    }
+                }
+                
+                // Calculate (cycleCount - demand) for this station
+                int difference = cycleCount - demand;
+                totalDifference += difference;
+            }
+        }
+        
+        // Validate based on total difference
+        if (totalDifference > 0) {
+            // Positive: More cycles available than demanded
+            String messageText = "You have " + totalDifference + " extra cycles remaining.\n\nPlease increase the demand values by " + totalDifference + " cycles across the stations to balance the redistribution.";
+            SpannableString spannableMessage = new SpannableString(messageText);
+            int increaseStart = messageText.indexOf("increase");
+            int increaseEnd = increaseStart + "increase".length();
+            spannableMessage.setSpan(new ForegroundColorSpan(Color.parseColor("#4CAF50")), increaseStart, increaseEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            
+            new AlertDialog.Builder(Redistribution.this)
+                    .setTitle("Demand Values Not Balanced")
+                    .setMessage(spannableMessage)
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        dialog.dismiss();
+                    })
+                    .show();
+            return;
+        } else if (totalDifference < 0) {
+            // Negative: More cycles demanded than available
+            int absoluteDifference = Math.abs(totalDifference);
+            String messageText = "You have exceeded available cycles by " + absoluteDifference + " cycles.\n\nPlease decrease the demand values by " + absoluteDifference + " cycles across the stations to balance the redistribution.";
+            SpannableString spannableMessage = new SpannableString(messageText);
+            int decreaseStart = messageText.indexOf("decrease");
+            int decreaseEnd = decreaseStart + "decrease".length();
+            spannableMessage.setSpan(new ForegroundColorSpan(Color.parseColor("#F44336")), decreaseStart, decreaseEnd, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            
+            new AlertDialog.Builder(Redistribution.this)
+                    .setTitle("Demand Values Not Balanced")
+                    .setMessage(spannableMessage)
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        dialog.dismiss();
+                    })
+                    .show();
+            return;
+        }
+        
+        // totalDifference == 0: Valid inputs, show confirmation dialog
         AlertDialog.Builder builder = new AlertDialog.Builder(Redistribution.this);
         builder.setTitle("Confirm")
                 .setMessage("Do you want to save the cycle demand?")
@@ -267,6 +406,41 @@ public class Redistribution extends AppCompatActivity {
                     dialog.dismiss();
                 })
                 .show();
+    }
+    
+    /**
+     * Validates the demand values entered by admin
+     * Rules:
+     * - For each station: calculate (cycleCount - demand)
+     * - Sum all these values
+     * - If sum > 0: Demand is less (have more cycles than demanded) - return positive value
+     * - If sum < 0: Demand is more (need more cycles than available) - return negative value
+     * - If sum == 0: Valid (can submit) - return 0
+     * 
+     * @param demandMap Map of stationId -> demand value
+     * @return Difference (0 if valid, positive if demand is less, negative if demand is more)
+     */
+    private int validateDemandValues(Map<String, Integer> demandMap) {
+        int sum = 0;
+        
+        // Calculate sum of (cycleCount - demand) for all stations with entered demand
+        for (CycleDemandAdapter.StationDemandItem item : cycleDemandStationList) {
+            String stationId = item.getStationId();
+            
+            // Only consider stations where demand was entered
+            if (demandMap.containsKey(stationId)) {
+                Integer cycleCount = item.getCycleCount();
+                Integer demand = demandMap.get(stationId);
+                
+                if (cycleCount != null && demand != null) {
+                    // Calculate (cycleCount - demand)
+                    int difference = cycleCount - demand;
+                    sum += difference;
+                }
+            }
+        }
+        
+        return sum;
     }
     
     private void saveCycleDemandToFirebase(Map<String, Integer> demandMap) {
