@@ -15,6 +15,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -175,15 +176,32 @@ public class Redistribution extends AppCompatActivity {
     }
     
     private void showRedistributionScreen() {
-        // Launch RedistributionMapActivity when Redistribute button is clicked
-        Intent intent = new Intent(Redistribution.this, RedistributionMapActivity.class);
-        startActivity(intent);
+        // Show dialog to select algorithm
+        AlertDialog.Builder builder = new AlertDialog.Builder(Redistribution.this);
+        builder.setTitle("Select Route Algorithm");
         
-        // Commented out existing redistribution UI - now using map screen instead
-        // Hide initial buttons
-        // initialButtonsContainer.setVisibility(View.GONE);
-        // Show existing redistribution UI
-        // redistributeBtn.setVisibility(View.VISIBLE);
+        String[] algorithms = {
+            "Nearest Neighbor + 2-Opt\n(Fast Algorithm)",
+            "Ant Colony Optimization\n(Optimal Algorithm)"
+        };
+        
+        // When user clicks an option, it immediately launches with that algorithm
+        builder.setItems(algorithms, (dialog, which) -> {
+            String selectedAlgorithm = which == 0 ? "nearest_neighbor" : "ant_colony";
+            String algorithmName = which == 0 ? "Nearest Neighbor + 2-Opt" : "Ant Colony Optimization";
+            
+            // Launch RedistributionMapActivity with selected algorithm
+            Intent intent = new Intent(Redistribution.this, RedistributionMapActivity.class);
+            intent.putExtra("algorithm", selectedAlgorithm);
+            intent.putExtra("algorithm_name", algorithmName);
+            startActivity(intent);
+            dialog.dismiss();
+        });
+        
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
     
     private void fetchStationsForCycleDemand() {
@@ -278,7 +296,50 @@ public class Redistribution extends AppCompatActivity {
             return;
         }
         
-        // PRE-VALIDATION: Check if any station violates the <= 4 constraint for pickup/drop cycles
+        // PRE-VALIDATION 1: Check if any demand value exceeds MAX_DEMAND_VALUE (15)
+        List<String> maxDemandViolationStations = new ArrayList<>();
+        for (CycleDemandAdapter.StationDemandItem item : cycleDemandStationList) {
+            String stationId = item.getStationId();
+            Integer demand;
+            
+            if (demandMap.containsKey(stationId)) {
+                demand = demandMap.get(stationId);
+            } else {
+                demand = item.getCurrentDemand();
+                if (demand == null) {
+                    demand = 0;
+                }
+            }
+            
+            // Check constraint: demand value must be <= MAX_DEMAND_VALUE (15)
+            if (demand > CycleDemandAdapter.MAX_DEMAND_VALUE) {
+                String stationName = item.getStationName();
+                maxDemandViolationStations.add(stationName + " (" + stationId + "): " + demand);
+            }
+        }
+        
+        // If max demand validation failed, show error dialog
+        if (!maxDemandViolationStations.isEmpty()) {
+            StringBuilder errorMessage = new StringBuilder();
+            errorMessage.append("The following stations have demand values greater than ")
+                    .append(CycleDemandAdapter.MAX_DEMAND_VALUE).append(":\n\n");
+            for (String station : maxDemandViolationStations) {
+                errorMessage.append("• ").append(station).append("\n");
+            }
+            errorMessage.append("\nMaximum demand allowed is ").append(CycleDemandAdapter.MAX_DEMAND_VALUE)
+                    .append(" cycles per station.");
+            
+            new AlertDialog.Builder(Redistribution.this)
+                    .setTitle("Maximum Demand Violation")
+                    .setMessage(errorMessage.toString())
+                    .setPositiveButton("OK", (dialog, which) -> {
+                        dialog.dismiss();
+                    })
+                    .show();
+            return;
+        }
+        
+        // PRE-VALIDATION 2: Check if any station violates the <= 4 constraint for pickup/drop cycles
         List<String> violationStations = new ArrayList<>();
         for (CycleDemandAdapter.StationDemandItem item : cycleDemandStationList) {
             String stationId = item.getStationId();
