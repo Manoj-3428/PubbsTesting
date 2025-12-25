@@ -176,24 +176,30 @@ public class Redistribution extends AppCompatActivity {
     }
     
     private void showRedistributionScreen() {
-        // Show dialog to select algorithm
+        // Show dialog to select vehicle view
         AlertDialog.Builder builder = new AlertDialog.Builder(Redistribution.this);
-        builder.setTitle("Select Route Algorithm");
+        builder.setTitle("Select Vehicle Route");
         
-        String[] algorithms = {
-            "Nearest Neighbor + 2-Opt\n(Fast Algorithm)",
-            "Ant Colony Optimization\n(Optimal Algorithm)"
+        String[] vehicleOptions = {
+            "Vehicle 1",
+            "Vehicle 2",
+            "Total Path"
         };
         
-        // When user clicks an option, it immediately launches with that algorithm
-        builder.setItems(algorithms, (dialog, which) -> {
-            String selectedAlgorithm = which == 0 ? "nearest_neighbor" : "ant_colony";
-            String algorithmName = which == 0 ? "Nearest Neighbor + 2-Opt" : "Ant Colony Optimization";
+        // When user clicks an option, launch with selected vehicle
+        builder.setItems(vehicleOptions, (dialog, which) -> {
+            String selectedVehicle = null;
+            if (which == 0) {
+                selectedVehicle = "vehicle1";
+            } else if (which == 1) {
+                selectedVehicle = "vehicle2";
+            } else if (which == 2) {
+                selectedVehicle = "total";
+            }
             
-            // Launch RedistributionMapActivity with selected algorithm
+            // Launch RedistributionMapActivity with selected vehicle
             Intent intent = new Intent(Redistribution.this, RedistributionMapActivity.class);
-            intent.putExtra("algorithm", selectedAlgorithm);
-            intent.putExtra("algorithm_name", algorithmName);
+            intent.putExtra("selected_vehicle", selectedVehicle);
             startActivity(intent);
             dialog.dismiss();
         });

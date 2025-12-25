@@ -115,9 +115,11 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
     // Vehicle capacity constant (now using RouteValidator)
     private static final int MAX_VEHICLE_CAPACITY = RouteValidator.getMaxVehicleCapacity();
     
-    // Algorithm selection
-    private String selectedAlgorithm = "nearest_neighbor"; // Default to nearest neighbor
-    private String selectedAlgorithmName = "Nearest Neighbor + 2-Opt"; // Display name
+    // Multi-vehicle support
+    private Map<String, List<StationData>> vehicleStations = new HashMap<>(); // vehicleId -> stations
+    private Map<String, List<StationData>> vehicleRoutes = new HashMap<>(); // vehicleId -> route
+    private Map<String, List<LatLng>> vehiclePathPoints = new HashMap<>(); // vehicleId -> path points
+    private String selectedVehicle = "vehicle1"; // Currently selected vehicle to display
     private double finalRouteDistance = 0; // Store final route distance for toast
     
     @Override
@@ -125,14 +127,11 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_redistribution_map);
         
-        // Read algorithm selection from Intent
-        String algorithm = getIntent().getStringExtra("algorithm");
-        String algorithmName = getIntent().getStringExtra("algorithm_name");
-        if (algorithm != null && (algorithm.equals("nearest_neighbor") || algorithm.equals("ant_colony"))) {
-            selectedAlgorithm = algorithm;
-            selectedAlgorithmName = algorithmName != null ? algorithmName : 
-                (algorithm.equals("ant_colony") ? "Ant Colony Optimization" : "Nearest Neighbor + 2-Opt");
-            Log.d(TAG, "Selected algorithm: " + selectedAlgorithm + " (" + selectedAlgorithmName + ")");
+        // Read vehicle selection from Intent
+        String vehicle = getIntent().getStringExtra("selected_vehicle");
+        if (vehicle != null && (vehicle.equals("vehicle1") || vehicle.equals("vehicle2") || vehicle.equals("total"))) {
+            selectedVehicle = vehicle;
+            Log.d(TAG, "Selected vehicle: " + selectedVehicle);
         }
         
         // Read organisation from SharedPreferences
@@ -277,13 +276,31 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                     }
                 }
                 
-                // After fetching, start pre-calculating road distances, then calculate route
+                // If "total" is selected, skip partitioning and use all stations
+                // Otherwise, partition stations into vehicle groups
+                if (selectedVehicle.equals("total")) {
+                    Log.d(TAG, "Total path selected - using all stations without partitioning");
+                    // For total path, we'll use all pickup and drop stations directly
+                    vehicleStations.clear();
+                } else {
+                    // Partition stations into vehicle groups for vehicle1/vehicle2
+                    Log.d(TAG, "Partitioning stations into vehicle groups...");
+                    vehicleStations = VehiclePartitionManager.partitionStations(pickupStations, dropStations);
+                    
+                    // Validate each vehicle group
+                    for (Map.Entry<String, List<StationData>> entry : vehicleStations.entrySet()) {
+                        boolean feasible = VehiclePartitionManager.isVehicleGroupFeasible(entry.getValue());
+                        Log.d(TAG, entry.getKey() + " feasibility: " + feasible + " (" + entry.getValue().size() + " stations)");
+                    }
+                }
+                
+                // Update route summary cards
                 updateRouteSummaryCards();
                 
                 // Show loading overlay
                 showLoadingOverlay();
                 
-                // Start pre-calculating road distances and wait for enough to be cached before calculating route
+                // Start pre-calculating road distances and wait for enough to be cached before calculating routes
                 preCalculateRoadDistancesAndCalculateRoute();
             }
             
@@ -307,47 +324,28 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         stationMarkers.clear();
         selectedMarker = null; // Reset selected marker
         
-        // Create a map to quickly find station order in route
-        Map<String, Integer> stationOrderMap = new HashMap<>();
+        // Only show markers for stations in the current route (selected vehicle's route)
+        // This ensures we only display pins for relevant stations, not all stations
         for (int i = 0; i < currentRoute.size(); i++) {
-            stationOrderMap.put(currentRoute.get(i).stationId, i + 1); // 1-based order
-        }
-        
-        // Get the route to identify starting station
-        StationData startingStation = currentRoute.isEmpty() ? null : currentRoute.get(0);
-        
-        // Add markers for all stations
-        for (StationData station : allStations) {
+            StationData station = currentRoute.get(i);
+            int orderNumber = i + 1; // 1-based order
+            
             LatLng position = new LatLng(station.latitude, station.longitude);
             
             BitmapDescriptor icon;
             String title;
-            int orderNumber = -1; // -1 means not in route
-            
-            // Find the order of this station in the route
-            if (stationOrderMap.containsKey(station.stationId)) {
-                orderNumber = stationOrderMap.get(station.stationId);
-            }
             
             // Color scheme: Pickup = GREEN, Drop = RED
             if ("pickup".equals(station.stationType)) {
-                // Green marker for pickup stations
-                if (orderNumber > 0) {
-                    icon = createMarkerWithNumber(BitmapDescriptorFactory.HUE_GREEN, orderNumber);
-                } else {
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN);
-                }
+                // Green marker for pickup stations with order number
+                icon = createMarkerWithNumber(BitmapDescriptorFactory.HUE_GREEN, orderNumber);
                 title = station.stationName + "\n" + station.cyclesToMove + " Cycles To Pick";
             } else if ("drop".equals(station.stationType)) {
-                // Red marker for drop stations
-                if (orderNumber > 0) {
-                    icon = createMarkerWithNumber(BitmapDescriptorFactory.HUE_RED, orderNumber);
-                } else {
-                    icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED);
-                }
+                // Red marker for drop stations with order number
+                icon = createMarkerWithNumber(BitmapDescriptorFactory.HUE_RED, orderNumber);
                 title = station.stationName + "\n" + station.cyclesToMove + " Cycles To Drop";
             } else {
-                // Skip stations with no redistribution needed
+                // Skip stations with no redistribution needed (shouldn't happen in route, but safety check)
                 continue;
             }
             
@@ -471,8 +469,39 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
      */
     private void updateRouteSummaryCards() {
         if (tvPickupStopsCount != null && tvDropStopsCount != null) {
-            tvPickupStopsCount.setText(String.valueOf(pickupStations.size()));
-            tvDropStopsCount.setText(String.valueOf(dropStations.size()));
+            // Update based on selected vehicle route
+            if (selectedVehicle.equals("total")) {
+                // Show totals for total path (all stations in one route)
+                if (vehicleRoutes.containsKey("total")) {
+                    int totalPickups = 0;
+                    int totalDrops = 0;
+                    for (StationData station : vehicleRoutes.get("total")) {
+                        if ("pickup".equals(station.stationType)) totalPickups++;
+                        else if ("drop".equals(station.stationType)) totalDrops++;
+                    }
+                    tvPickupStopsCount.setText(String.valueOf(totalPickups));
+                    tvDropStopsCount.setText(String.valueOf(totalDrops));
+                } else {
+                    // Fallback to all stations if route not calculated yet
+                    tvPickupStopsCount.setText(String.valueOf(pickupStations.size()));
+                    tvDropStopsCount.setText(String.valueOf(dropStations.size()));
+                }
+            } else if (vehicleRoutes.containsKey(selectedVehicle)) {
+                // Show counts for selected vehicle
+                List<StationData> route = vehicleRoutes.get(selectedVehicle);
+                int pickups = 0;
+                int drops = 0;
+                for (StationData station : route) {
+                    if ("pickup".equals(station.stationType)) pickups++;
+                    else if ("drop".equals(station.stationType)) drops++;
+                }
+                tvPickupStopsCount.setText(String.valueOf(pickups));
+                tvDropStopsCount.setText(String.valueOf(drops));
+            } else {
+                // Default to all stations
+                tvPickupStopsCount.setText(String.valueOf(pickupStations.size()));
+                tvDropStopsCount.setText(String.valueOf(dropStations.size()));
+            }
         }
     }
     
@@ -505,10 +534,12 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                     redistributionFinishedBtn.setVisibility(View.VISIBLE);
                 }
                 
-                // Show toast with algorithm and distance
+                // Show toast with vehicle and distance
                 if (finalRouteDistance > 0) {
                     String distanceKm = String.format("%.2f", finalRouteDistance / 1000.0);
-                    String message = selectedAlgorithmName + "\nTotal Distance: " + distanceKm + " km";
+                    String vehicleName = selectedVehicle.equals("total") ? "Total Path" : 
+                        (selectedVehicle.equals("vehicle1") ? "Vehicle 1" : "Vehicle 2");
+                    String message = vehicleName + "\nTotal Distance: " + distanceKm + " km";
                     Toast.makeText(RedistributionMapActivity.this, message, Toast.LENGTH_LONG).show();
                 }
             });
@@ -597,101 +628,6 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         }
     }
     
-    private void calculateAndDrawRoute() {
-        // Clear ALL existing polylines - ensure only ONE polyline exists
-        for (Polyline polyline : routePolylines) {
-            polyline.remove();
-        }
-        routePolylines.clear();
-        
-        if (pickupStations.isEmpty() || dropStations.isEmpty()) {
-            Log.d(TAG, "No pickup or drop stations to connect");
-            hideLoadingOverlay();
-            return;
-        }
-        
-        Log.d(TAG, "Calculating route with capacity constraints (Max Capacity: " + MAX_VEHICLE_CAPACITY + ")");
-        Log.d(TAG, "Pickup stations: " + pickupStations.size() + ", Drop stations: " + dropStations.size());
-        Log.d(TAG, "Using algorithm: " + selectedAlgorithm);
-        
-        // Calculate route using selected algorithm
-        List<StationData> route;
-        if ("ant_colony".equals(selectedAlgorithm)) {
-            route = calculateAntColonyRoute();
-        } else {
-            route = calculateNearestNeighborRoute();
-        }
-        currentRoute = new ArrayList<>(route); // Store for marker display
-        
-        if (route.isEmpty()) {
-            Log.w(TAG, "No valid route found!");
-            hideLoadingOverlay();
-            Toast.makeText(this, "No valid route found that satisfies capacity constraints!", 
-                    Toast.LENGTH_SHORT).show();
-            return;
-        }
-        
-        // Log route and vehicle state
-        double initialDistance = calculateRouteDistance(route);
-        String algorithmName = "ant_colony".equals(selectedAlgorithm) ? "Ant Colony Optimization" : "Nearest Neighbor";
-        Log.d(TAG, "Initial " + algorithmName + " route distance: " + String.format("%.2f", initialDistance / 1000.0) + " km (" + String.format("%.0f", initialDistance) + " meters)");
-        logRouteWithVehicleState(route);
-        
-        // Apply 2-opt improvement only for Nearest Neighbor (ACO already optimizes)
-        List<StationData> optimizedRoute = route;
-        double finalDistance = initialDistance;
-        if ("nearest_neighbor".equals(selectedAlgorithm)) {
-            optimizedRoute = optimizeRouteWith2Opt(route);
-            
-            if (!optimizedRoute.equals(route)) {
-                finalDistance = calculateRouteDistance(optimizedRoute);
-                double improvement = ((initialDistance - finalDistance) / initialDistance) * 100;
-                Log.d(TAG, "Route improved by 2-opt optimization");
-                Log.d(TAG, "Optimized route distance: " + String.format("%.2f", finalDistance / 1000.0) + " km (" + String.format("%.0f", finalDistance) + " meters)");
-                Log.d(TAG, "Distance improvement: " + String.format("%.2f", improvement) + "% (" + String.format("%.0f", initialDistance - finalDistance) + " meters saved)");
-                logRouteWithVehicleState(optimizedRoute);
-                route = optimizedRoute;
-                currentRoute = new ArrayList<>(route); // Update stored route
-            } else {
-                Log.d(TAG, "2-opt optimization: No improvement found (route is already locally optimal)");
-            }
-        } else {
-            Log.d(TAG, "Ant Colony Optimization: Route already optimized, skipping 2-opt");
-        }
-        
-        // Store final distance for toast display
-        finalRouteDistance = finalDistance;
-        
-        // Don't draw initial polyline - wait for real road paths
-        // Only draw when road paths are fetched
-        if (route.size() >= 2) {
-            Log.d(TAG, "Preparing route with " + route.size() + " stations - fetching road paths...");
-            
-            // Log route for debugging
-            StringBuilder routeStr = new StringBuilder("Route: ");
-            for (int i = 0; i < route.size(); i++) {
-                routeStr.append(route.get(i).stationId);
-                if (i < route.size() - 1) routeStr.append(" -> ");
-            }
-            Log.d(TAG, routeStr.toString());
-            
-            // Create ONE empty polyline - will be updated with real road paths only (NO straight lines)
-            PolylineOptions polylineOptions = new PolylineOptions()
-                    .color(Color.parseColor("#1976D2"))
-                    .width(12f)
-                    .geodesic(false)
-                    .zIndex(-10.0f);
-            
-            Polyline polyline = googleMap.addPolyline(polylineOptions);
-            routePolylines.add(polyline); // Only ONE polyline in the list
-            
-            // Now asynchronously fetch actual road paths for all segments and update polyline
-            // Loading overlay will be hidden when all paths are fetched
-            fetchRoadPathsAndUpdatePolyline(route, polyline);
-        } else {
-            hideLoadingOverlay();
-        }
-    }
     
     /**
      * Log the route with vehicle state at each step (for debugging)
@@ -1246,12 +1182,12 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
                                         // Update distance display in route title
                                         updateRouteDistanceDisplay(totalDistance);
                                         
-                                        // Show toast with algorithm name and total distance
-                                        String algorithmName = "ant_colony".equals(selectedAlgorithm) ? 
-                                                "Ant Colony Optimization" : "Nearest Neighbor + 2-Opt";
+                                        // Show toast with vehicle name and total distance
+                                        String vehicleName = selectedVehicle.equals("total") ? "Total Path" : 
+                                                (selectedVehicle.equals("vehicle1") ? "Vehicle 1" : "Vehicle 2");
                                         String distanceText = String.format("%.2f", totalDistance / 1000.0) + " km";
                                         Toast.makeText(RedistributionMapActivity.this, 
-                                                algorithmName + "\nTotal Distance: " + distanceText, 
+                                                vehicleName + "\nTotal Distance: " + distanceText, 
                                                 Toast.LENGTH_LONG).show();
                                         
                                         hideLoadingOverlay();
@@ -1938,26 +1874,44 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
     /**
      * Pre-calculate road distances for all station pairs asynchronously
      * This will populate the cache so subsequent route calculations can use actual road distances
+     * Only calculates distances for the selected vehicle's stations (or all stations for "total")
      */
     private void preCalculateRoadDistancesAndCalculateRoute() {
-        Log.d(TAG, "Pre-calculating road distances for all station pairs...");
         List<StationData> allRelevantStations = new ArrayList<>();
-        allRelevantStations.addAll(pickupStations);
-        allRelevantStations.addAll(dropStations);
+        
+        // Determine which stations to use based on selected vehicle
+        if (selectedVehicle.equals("total")) {
+            // For "total", use all stations
+            Log.d(TAG, "Pre-calculating road distances for TOTAL PATH (all stations)...");
+            allRelevantStations.addAll(pickupStations);
+            allRelevantStations.addAll(dropStations);
+        } else {
+            // For vehicle1 or vehicle2, use only that vehicle's stations
+            if (vehicleStations.containsKey(selectedVehicle)) {
+                List<StationData> vehicleStationsList = vehicleStations.get(selectedVehicle);
+                Log.d(TAG, "Pre-calculating road distances for " + selectedVehicle + " (" + 
+                      vehicleStationsList.size() + " stations)...");
+                allRelevantStations.addAll(vehicleStationsList);
+            } else {
+                Log.w(TAG, selectedVehicle + " has no stations assigned, using all stations as fallback");
+                allRelevantStations.addAll(pickupStations);
+                allRelevantStations.addAll(dropStations);
+            }
+        }
         
         // Calculate expected number of distances (n*(n-1)/2 pairs)
         expectedRoadDistancesCount = allRelevantStations.size() * (allRelevantStations.size() - 1) / 2;
         cachedRoadDistancesCount.set(0);
         
-        // Set callback to calculate route when enough distances are cached
+        // Set callback to calculate routes when enough distances are cached
         // We'll start route calculation when 100% of distances are cached (required since we don't use straight-line fallback)
         final double requiredCachePercentage = 1.0;
         final int requiredCachedCount = (int) (expectedRoadDistancesCount * requiredCachePercentage);
         
         roadDistanceCallback = () -> {
-            // Calculate route when enough distances are cached
+            // Calculate routes for the selected vehicle when enough distances are cached
             runOnUiThread(() -> {
-                calculateAndDrawRoute();
+                calculateRoutesForAllVehicles();
                 displayStationsOnMap();
             });
         };
@@ -1978,11 +1932,13 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
      * Ant Colony Optimization Algorithm for Capacitated Vehicle Routing
      * 
      * Parameters:
-     * - alpha: pheromone importance (default: 1.0)
-     * - beta: distance importance (default: 2.0)
-     * - evaporation: pheromone evaporation rate (default: 0.5)
-     * - numAnts: number of ants per iteration (default: 10)
-     * - maxIterations: maximum iterations (default: 50)
+     * - alpha: pheromone importance (1.2)
+     * - beta: distance importance (3.5)
+     * - evaporation: pheromone evaporation rate (0.15)
+     * - nonEvaporationRate: non-evaporation rate (0.85 = 1 - ρ)
+     * - chargeFactor: charge factor for pheromone deposit (3.5)
+     * - numAnts: number of ants per iteration (15)
+     * - maxIterations: maximum iterations (50)
      * 
      * All constraints are enforced:
      * - Vehicle capacity (max 4 cycles)
@@ -1993,9 +1949,11 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         Log.d(TAG, "Starting Ant Colony Optimization algorithm...");
         
         // ACO parameters
-        double alpha = 1.0; // Pheromone importance
-        double beta = 2.0;  // Distance importance
-        double evaporation = 0.5; // Evaporation rate
+        double alpha = 1.2; // Pheromone importance
+        double beta = 3.5;  // Distance importance
+        double evaporation = 0.15; // Evaporation rate (ρ)
+        double nonEvaporationRate = 0.85; // Non-evaporation rate (1 - ρ)
+        double chargeFactor = 3.5; // Charge factor for pheromone deposit
         int numAnts = 15; // Number of ants per iteration
         int maxIterations = 50; // Maximum iterations
         
@@ -2048,16 +2006,16 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             }
             
             // Update pheromones
-            // Evaporation
+            // Evaporation: Apply non-evaporation rate (1 - ρ)
             for (String key : pheromone.keySet()) {
-                pheromone.put(key, pheromone.get(key) * (1.0 - evaporation));
+                pheromone.put(key, pheromone.get(key) * nonEvaporationRate);
             }
             
             // Deposit pheromones (only for valid routes)
             for (int i = 0; i < antRoutes.size(); i++) {
                 List<StationData> route = antRoutes.get(i);
                 double routeDistance = antDistances.get(i);
-                double pheromoneDeposit = 1000.0 / routeDistance; // Inverse of distance
+                double pheromoneDeposit = chargeFactor / routeDistance; // Charge factor * inverse of distance
                 
                 // Deposit pheromone on all edges in this route
                 for (int j = 0; j < route.size() - 1; j++) {
@@ -2083,6 +2041,161 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             Log.w(TAG, "ACO failed to find valid route, falling back to nearest neighbor");
             return calculateNearestNeighborRoute();
         }
+    }
+    
+    /**
+     * Calculate ACO route for a specific vehicle (used in multi-vehicle scenario)
+     * Uses the same ACO algorithm but works with vehicle-specific pickup/drop stations
+     */
+    private List<StationData> calculateAntColonyRouteForVehicle(String vehicleId) {
+        // This method uses the same calculateAntColonyRoute() logic
+        // but pickupStations and dropStations are already set to vehicle-specific lists
+        return calculateAntColonyRoute();
+    }
+    
+    /**
+     * Calculate routes for all vehicles independently using ACO
+     * If "total" is selected, calculates one route for all stations (no partitioning)
+     */
+    private void calculateRoutesForAllVehicles() {
+        vehicleRoutes.clear();
+        
+        // If "total" is selected, calculate route for ALL stations (no partitioning)
+        if (selectedVehicle.equals("total")) {
+            Log.d(TAG, "Calculating route for TOTAL PATH with all stations (" + 
+                  pickupStations.size() + " pickups, " + dropStations.size() + " drops)");
+            
+            // Use all pickup and drop stations directly (no partitioning)
+            List<StationData> route = calculateAntColonyRoute();
+            
+            if (!route.isEmpty()) {
+                vehicleRoutes.put("total", route);
+                double routeDistance = calculateRouteDistance(route);
+                Log.d(TAG, "TOTAL PATH route calculated: " + route.size() + " stations, " + 
+                      String.format("%.2f", routeDistance / 1000.0) + " km");
+            } else {
+                Log.w(TAG, "TOTAL PATH failed to find valid route");
+            }
+        } else {
+            // Calculate route only for the selected vehicle (not all vehicles)
+            String vehicleId = selectedVehicle;
+            List<StationData> vehicleStationsList = vehicleStations.get(vehicleId);
+            
+            if (vehicleStationsList == null || vehicleStationsList.isEmpty()) {
+                Log.w(TAG, vehicleId + " has no stations assigned");
+                return;
+            }
+            
+            // Separate pickups and drops for this vehicle
+            List<StationData> vehiclePickups = new ArrayList<>();
+            List<StationData> vehicleDrops = new ArrayList<>();
+            
+            for (StationData station : vehicleStationsList) {
+                if ("pickup".equals(station.stationType)) {
+                    vehiclePickups.add(station);
+                } else if ("drop".equals(station.stationType)) {
+                    vehicleDrops.add(station);
+                }
+            }
+            
+            if (vehiclePickups.isEmpty() || vehicleDrops.isEmpty()) {
+                Log.w(TAG, vehicleId + " does not have both pickups and drops");
+                return;
+            }
+            
+            Log.d(TAG, "Calculating route for " + vehicleId + " with " + vehiclePickups.size() + 
+                  " pickups and " + vehicleDrops.size() + " drops");
+            
+            // Temporarily set pickup and drop stations for route calculation
+            List<StationData> originalPickups = new ArrayList<>(pickupStations);
+            List<StationData> originalDrops = new ArrayList<>(dropStations);
+            
+            pickupStations = vehiclePickups;
+            dropStations = vehicleDrops;
+            
+            // Calculate route using ACO (always use ACO for multi-vehicle)
+            List<StationData> route = calculateAntColonyRouteForVehicle(vehicleId);
+            
+            // Restore original lists
+            pickupStations = originalPickups;
+            dropStations = originalDrops;
+            
+            if (!route.isEmpty()) {
+                vehicleRoutes.put(vehicleId, route);
+                double routeDistance = calculateRouteDistance(route);
+                Log.d(TAG, vehicleId + " route calculated: " + route.size() + " stations, " + 
+                      String.format("%.2f", routeDistance / 1000.0) + " km");
+            } else {
+                Log.w(TAG, vehicleId + " failed to find valid route");
+            }
+        }
+        
+        // Now draw the selected vehicle's route
+        drawSelectedVehicleRoute();
+    }
+    
+    /**
+     * Draw route for the currently selected vehicle
+     */
+    private void drawSelectedVehicleRoute() {
+        // Clear ALL existing polylines
+        for (Polyline polyline : routePolylines) {
+            polyline.remove();
+        }
+        routePolylines.clear();
+        
+        if (selectedVehicle.equals("total")) {
+            // Show total path (one route covering all stations)
+            drawVehicleRoute("total", Color.parseColor("#1976D2")); // Blue
+            if (vehicleRoutes.containsKey("total")) {
+                currentRoute = new ArrayList<>(vehicleRoutes.get("total"));
+            } else {
+                currentRoute.clear();
+            }
+        } else {
+            // Show only selected vehicle's route (partitioned)
+            drawVehicleRoute(selectedVehicle, Color.parseColor("#1976D2")); // Blue
+            if (vehicleRoutes.containsKey(selectedVehicle)) {
+                currentRoute = new ArrayList<>(vehicleRoutes.get(selectedVehicle));
+            } else {
+                currentRoute.clear();
+            }
+        }
+        
+        // Update route summary cards
+        updateRouteSummaryCards();
+    }
+    
+    /**
+     * Draw route for a specific vehicle
+     */
+    private void drawVehicleRoute(String vehicleId, int color) {
+        if (!vehicleRoutes.containsKey(vehicleId)) {
+            Log.w(TAG, "No route found for " + vehicleId);
+            return;
+        }
+        
+        List<StationData> route = vehicleRoutes.get(vehicleId);
+        
+        if (route.size() < 2) {
+            Log.w(TAG, vehicleId + " route has less than 2 stations");
+            return;
+        }
+        
+        Log.d(TAG, "Drawing route for " + vehicleId + " with " + route.size() + " stations");
+        
+        // Create polyline for this vehicle
+        PolylineOptions polylineOptions = new PolylineOptions()
+                .color(color)
+                .width(12f)
+                .geodesic(false)
+                .zIndex(-10.0f);
+        
+        Polyline polyline = googleMap.addPolyline(polylineOptions);
+        routePolylines.add(polyline);
+        
+        // Fetch road paths and update polyline
+        fetchRoadPathsAndUpdatePolyline(route, polyline);
     }
     
     /**
@@ -2162,7 +2275,8 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             
             for (StationData candidate : validCandidates) {
                 String key = currentStation.stationId + "_" + candidate.stationId;
-                double pheromoneLevel = pheromone.getOrDefault(key, 0.1);
+                Double pheromoneValue = pheromone.get(key);
+                double pheromoneLevel = (pheromoneValue != null) ? pheromoneValue : 0.1;
                 double distance = getRoadDistance(currentStation, candidate);
                 if (distance <= 0 || distance == Double.MAX_VALUE) {
                     distance = 10000.0; // Fallback for missing distances
