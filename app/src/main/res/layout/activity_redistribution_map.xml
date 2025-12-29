@@ -196,14 +196,30 @@
                     android:textColor="@android:color/black" />
             </LinearLayout>
         </RelativeLayout>
+        
     </FrameLayout>
+    
+    <!-- Arrival Card (shown when vehicle is near a station) - positioned at bottom, covers button -->
+    <include
+        android:id="@+id/arrival_card_include"
+        layout="@layout/arrival_card_station"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="0dp"
+        android:layout_marginEnd="0dp"
+        android:layout_marginBottom="0dp" />
 
-    <!-- Redistribution Finished Button -->
+    <!-- Redistribution Finished Button - positioned at bottom when card hidden, below card when shown -->
     <Button
         android:id="@+id/redistribution_finished_btn"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:layout_alignParentEnd="true"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"

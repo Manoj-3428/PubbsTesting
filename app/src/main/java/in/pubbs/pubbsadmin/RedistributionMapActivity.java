@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -39,6 +40,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.maps.model.Circle;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -122,6 +125,29 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
     private String selectedVehicle = "vehicle1"; // Currently selected vehicle to display
     private double finalRouteDistance = 0; // Store final route distance for toast
     
+    // Vehicle location tracking and proximity detection
+    private LatLng vehicleLocation = null; // Current vehicle location
+    private Marker vehicleLocationMarker = null; // Marker for vehicle location
+    private StationData nearbyStation = null; // Station within 100m radius
+    private Circle stationRadiusCircle = null; // Circle overlay for 100m radius
+    private static final double PROXIMITY_RADIUS_METERS = 100.0; // 100 meters
+    private DatabaseReference vehicleLocationRef = null; // Firebase reference for vehicle location
+    private ValueEventListener vehicleLocationListener = null; // Listener for location updates
+    
+    // Cache for vehicle location -> station road distances (key: "lat_lng_stationId")
+    private Map<String, Double> vehicleLocationDistanceCache = new HashMap<>();
+    
+    // Arrival card UI elements
+    private View arrivalCardContainer;
+    private TextView tvStationNameArrival;
+    private TextView tvStationTypeText;
+    private ImageView ivStationTypeIcon;
+    private ImageView ivStationTypeArrow;
+    private TextView tvCyclesCount;
+    private TextView tvCyclesLabel;
+    private Button btnStartAction;
+    private androidx.cardview.widget.CardView cardStationType;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -157,6 +183,36 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         tvRouteDistance = findViewById(R.id.tv_route_distance);
         loadingOverlay = findViewById(R.id.loading_overlay);
         
+        // Initialize arrival card views (from included layout)
+        // When using <include android:id="@+id/arrival_card_include">, the root view of the 
+        // included layout becomes the view with that ID. So arrival_card_include IS the container.
+        // However, the IDs inside the included layout are merged, so we can find them directly.
+        // Try to find the include view first (which is the root LinearLayout from arrival_card_station.xml)
+        arrivalCardContainer = findViewById(R.id.arrival_card_include);
+        if (arrivalCardContainer == null) {
+            // Fallback: try to find by the container ID (if IDs were merged)
+            arrivalCardContainer = findViewById(R.id.arrival_card_container);
+        }
+        
+        if (arrivalCardContainer != null) {
+            Log.d(TAG, "Arrival card container found successfully");
+            // IDs inside included layout are merged, so we can find them directly
+            tvStationNameArrival = findViewById(R.id.tv_station_name_arrival);
+            tvStationTypeText = findViewById(R.id.tv_station_type_text);
+            ivStationTypeIcon = findViewById(R.id.iv_station_type_icon);
+            ivStationTypeArrow = findViewById(R.id.iv_station_type_arrow);
+            tvCyclesCount = findViewById(R.id.tv_cycles_count);
+            tvCyclesLabel = findViewById(R.id.tv_cycles_label);
+            btnStartAction = findViewById(R.id.btn_start_action);
+            cardStationType = findViewById(R.id.card_station_type);
+            
+            // Set initial visibility to gone
+            arrivalCardContainer.setVisibility(View.GONE);
+            Log.d(TAG, "Arrival card initialized and set to GONE");
+        } else {
+            Log.e(TAG, "Arrival card container not found in layout - card will not be shown");
+        }
+        
         toolbarTitle.setText("Area Manager");
         backButton.setOnClickListener(v -> onBackPressed());
         
@@ -187,6 +243,15 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         String apiKey = getResources().getString(R.string.google_maps_key);
         Log.d(TAG, "Google Maps/Directions API Key loaded: " + 
               (apiKey != null && !apiKey.isEmpty() ? "YES (length: " + apiKey.length() + ")" : "NO"));
+        
+        // Map click listener - for testing: allow clicking on route path to set vehicle location
+        googleMap.setOnMapClickListener(latLng -> {
+            // Check if click is near any route polyline
+            if (isClickNearRoutePath(latLng)) {
+                // Show confirmation dialog
+                showSetLocationConfirmationDialog(latLng);
+            }
+        });
         
         // Marker click listener - animate to marker, highlight it, show info window, and highlight path segment
         googleMap.setOnMarkerClickListener(marker -> {
@@ -1913,6 +1978,8 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             runOnUiThread(() -> {
                 calculateRoutesForAllVehicles();
                 displayStationsOnMap();
+                // Start tracking vehicle location after route is calculated
+                startVehicleLocationTracking();
             });
         };
         
@@ -1932,13 +1999,11 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
      * Ant Colony Optimization Algorithm for Capacitated Vehicle Routing
      * 
      * Parameters:
-     * - alpha: pheromone importance (1.2)
-     * - beta: distance importance (3.5)
-     * - evaporation: pheromone evaporation rate (0.15)
-     * - nonEvaporationRate: non-evaporation rate (0.85 = 1 - ρ)
-     * - chargeFactor: charge factor for pheromone deposit (3.5)
-     * - numAnts: number of ants per iteration (15)
-     * - maxIterations: maximum iterations (50)
+     * - alpha: pheromone importance (default: 1.0)
+     * - beta: distance importance (default: 2.0)
+     * - evaporation: pheromone evaporation rate (default: 0.5)
+     * - numAnts: number of ants per iteration (default: 10)
+     * - maxIterations: maximum iterations (default: 50)
      * 
      * All constraints are enforced:
      * - Vehicle capacity (max 4 cycles)
@@ -1949,11 +2014,9 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         Log.d(TAG, "Starting Ant Colony Optimization algorithm...");
         
         // ACO parameters
-        double alpha = 1.2; // Pheromone importance
-        double beta = 3.5;  // Distance importance
-        double evaporation = 0.15; // Evaporation rate (ρ)
-        double nonEvaporationRate = 0.85; // Non-evaporation rate (1 - ρ)
-        double chargeFactor = 3.5; // Charge factor for pheromone deposit
+        double alpha = 1.0; // Pheromone importance
+        double beta = 2.0;  // Distance importance
+        double evaporation = 0.5; // Evaporation rate
         int numAnts = 15; // Number of ants per iteration
         int maxIterations = 50; // Maximum iterations
         
@@ -2006,16 +2069,16 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
             }
             
             // Update pheromones
-            // Evaporation: Apply non-evaporation rate (1 - ρ)
+            // Evaporation
             for (String key : pheromone.keySet()) {
-                pheromone.put(key, pheromone.get(key) * nonEvaporationRate);
+                pheromone.put(key, pheromone.get(key) * (1.0 - evaporation));
             }
             
             // Deposit pheromones (only for valid routes)
             for (int i = 0; i < antRoutes.size(); i++) {
                 List<StationData> route = antRoutes.get(i);
                 double routeDistance = antDistances.get(i);
-                double pheromoneDeposit = chargeFactor / routeDistance; // Charge factor * inverse of distance
+                double pheromoneDeposit = 1000.0 / routeDistance; // Inverse of distance
                 
                 // Deposit pheromone on all edges in this route
                 for (int j = 0; j < route.size() - 1; j++) {
@@ -2464,6 +2527,589 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
         }
     }
     
+    /**
+     * Start tracking vehicle location from Firebase LiveTrack
+     * This will continuously monitor vehicle position and check proximity to stations
+     */
+    private void startVehicleLocationTracking() {
+        if (organisation == null || organisation.isEmpty()) {
+            Log.e(TAG, "Organisation name not found, cannot track vehicle location");
+            return;
+        }
+        
+        // Get vehicle device ID from Intent or use a default for testing
+        // In production, this should be the actual vehicle device ID from the selected vehicle
+        String vehicleDeviceId = getIntent().getStringExtra("vehicle_device_id");
+        if (vehicleDeviceId == null || vehicleDeviceId.isEmpty()) {
+            // For testing: try to get first device from LiveTrack
+            // In production, map vehicle1/vehicle2 to actual device IDs
+            Log.w(TAG, "No vehicle device ID provided in Intent, attempting to find device from LiveTrack");
+            
+            // Try to get first available device from LiveTrack as fallback
+            DatabaseReference liveTrackRef = FirebaseDatabase.getInstance()
+                    .getReference(organisation)
+                    .child("LiveTrack");
+            
+            liveTrackRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    if (snapshot.exists() && snapshot.getChildrenCount() > 0) {
+                        // Use first device found
+                        String firstDeviceId = snapshot.getChildren().iterator().next().getKey();
+                        if (firstDeviceId != null) {
+                            Log.d(TAG, "Using first device from LiveTrack: " + firstDeviceId);
+                            startTrackingForDevice(firstDeviceId);
+                        } else {
+                            Log.w(TAG, "Could not find any device in LiveTrack");
+                        }
+                    } else {
+                        Log.w(TAG, "LiveTrack is empty, proximity detection will not work");
+                    }
+                }
+                
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) {
+                    Log.e(TAG, "Error checking LiveTrack: " + error.getMessage());
+                }
+            });
+            return;
+        }
+        
+        startTrackingForDevice(vehicleDeviceId);
+    }
+    
+    /**
+     * Start tracking for a specific device ID
+     */
+    private void startTrackingForDevice(String vehicleDeviceId) {
+        
+        // Path: organisation/LiveTrack/{vehicleDeviceId}/latest/location
+        // We'll track the latest location entry
+        DatabaseReference liveTrackRef = FirebaseDatabase.getInstance()
+                .getReference(organisation)
+                .child("LiveTrack")
+                .child(vehicleDeviceId);
+        
+        vehicleLocationListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (snapshot.exists()) {
+                    // Get the latest location entry (last child)
+                    DataSnapshot latestSnapshot = null;
+                    long maxTimestamp = 0;
+                    
+                    for (DataSnapshot bookingSnapshot : snapshot.getChildren()) {
+                        DataSnapshot locationSnapshot = bookingSnapshot.child("location");
+                        if (locationSnapshot.exists()) {
+                            Long timestamp = locationSnapshot.child("timestamp").getValue(Long.class);
+                            if (timestamp != null && timestamp > maxTimestamp) {
+                                maxTimestamp = timestamp;
+                                latestSnapshot = locationSnapshot;
+                            } else if (timestamp == null) {
+                                // If no timestamp, use this as fallback
+                                latestSnapshot = locationSnapshot;
+                            }
+                        }
+                    }
+                    
+                    if (latestSnapshot == null) {
+                        // Try to get any location if no timestamp-based selection worked
+                        for (DataSnapshot bookingSnapshot : snapshot.getChildren()) {
+                            DataSnapshot locationSnapshot = bookingSnapshot.child("location");
+                            if (locationSnapshot.exists()) {
+                                latestSnapshot = locationSnapshot;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (latestSnapshot != null) {
+                        Double lat = latestSnapshot.child("latitude").getValue(Double.class);
+                        Double lng = latestSnapshot.child("longitude").getValue(Double.class);
+                        
+                        if (lat != null && lng != null) {
+                            vehicleLocation = new LatLng(lat, lng);
+                            Log.d(TAG, "Vehicle location updated: " + lat + ", " + lng);
+                            
+                            // Update vehicle location marker
+                            updateVehicleLocationMarker(vehicleLocation);
+                            
+                            // Check proximity to stations
+                            checkProximityToStations();
+                        }
+                    }
+                }
+            }
+            
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Error tracking vehicle location: " + error.getMessage());
+            }
+        };
+        
+        vehicleLocationRef = liveTrackRef;
+        vehicleLocationRef.addValueEventListener(vehicleLocationListener);
+        Log.d(TAG, "Started tracking vehicle location for device: " + vehicleDeviceId);
+    }
+    
+    /**
+     * Check if a map click is near any route polyline (within 50m)
+     */
+    private boolean isClickNearRoutePath(LatLng clickLocation) {
+        if (routePolylines == null || routePolylines.isEmpty()) {
+            return false;
+        }
+        
+        final double CLICK_TOLERANCE_METERS = 50.0; // Consider click "near" if within 50m of polyline
+        
+        for (Polyline polyline : routePolylines) {
+            List<LatLng> points = polyline.getPoints();
+            if (points == null || points.isEmpty()) {
+                continue;
+            }
+            
+            // Check distance to each point on the polyline
+            for (LatLng point : points) {
+                double distance = calculateHaversineDistance(clickLocation, point);
+                if (distance <= CLICK_TOLERANCE_METERS) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Show confirmation dialog to set vehicle location
+     */
+    private void showSetLocationConfirmationDialog(LatLng location) {
+        new AlertDialog.Builder(this)
+                .setTitle("Set Vehicle Location")
+                .setMessage("Set this location as the redistribution vehicle's current location?")
+                .setPositiveButton("Yes", (dialog, which) -> {
+                    setVehicleLocation(location);
+                    Toast.makeText(this, "Vehicle location set", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
+    }
+    
+    /**
+     * Set vehicle location (for testing purposes)
+     */
+    private void setVehicleLocation(LatLng location) {
+        vehicleLocation = location;
+        // Clear distance cache when location changes
+        vehicleLocationDistanceCache.clear();
+        Log.d(TAG, "Vehicle location set to: " + location.latitude + ", " + location.longitude);
+        
+        // Update or create vehicle location marker
+        updateVehicleLocationMarker(location);
+        
+        // Immediately check proximity with new location
+        checkProximityToStations();
+    }
+    
+    /**
+     * Update or create vehicle location marker on the map
+     */
+    private void updateVehicleLocationMarker(LatLng location) {
+        if (googleMap == null) {
+            return;
+        }
+        
+        if (vehicleLocationMarker != null) {
+            // Update existing marker position
+            vehicleLocationMarker.setPosition(location);
+        } else {
+            // Create new marker for vehicle location
+            // Use a distinct icon/color to differentiate from station markers
+            vehicleLocationMarker = googleMap.addMarker(new MarkerOptions()
+                    .position(location)
+                    .title("Vehicle Location")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+                    .anchor(0.5f, 0.5f)); // Center the marker on the location
+            
+            Log.d(TAG, "Created vehicle location marker");
+        }
+        
+        // Animate camera to vehicle location if it's far from current view
+        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(location, 16f));
+    }
+    
+    /**
+     * Check if vehicle is within 100m radius of any station using REAL ROAD DISTANCES
+     * If yes, show arrival card and highlight station radius
+     */
+    private void checkProximityToStations() {
+        if (vehicleLocation == null || googleMap == null) {
+            return;
+        }
+        
+        StationData closestStation = null;
+        double minDistance = Double.MAX_VALUE;
+        
+        // Check all stations in current route using ROAD DISTANCES
+        for (StationData station : currentRoute) {
+            LatLng stationLocation = new LatLng(station.latitude, station.longitude);
+            
+            // Use road distance instead of straight-line distance
+            double distance = getRoadDistanceFromVehicle(station);
+            
+            if (distance < minDistance && distance != Double.MAX_VALUE) {
+                minDistance = distance;
+                closestStation = station;
+            }
+        }
+        
+        // Check if closest station is within 100m radius (road distance)
+        if (closestStation != null && minDistance <= PROXIMITY_RADIUS_METERS) {
+            if (nearbyStation == null || !nearbyStation.stationId.equals(closestStation.stationId)) {
+                // New station detected or different station
+                nearbyStation = closestStation;
+                Log.d(TAG, "Vehicle is near station: " + closestStation.stationName + " (road distance: " + minDistance + "m)");
+                drawStationRadiusCircle(closestStation);
+                StationData finalClosestStation = closestStation;
+                runOnUiThread(() -> showArrivalCard(finalClosestStation)); // Ensure UI update on main thread
+            }
+        } else {
+            // Vehicle moved away from station
+            if (nearbyStation != null) {
+                runOnUiThread(() -> {
+                    hideArrivalCard();
+                    removeStationRadiusCircle();
+                });
+                nearbyStation = null;
+                Log.d(TAG, "Vehicle moved away from station");
+            }
+        }
+    }
+    
+    /**
+     * Get road distance from vehicle location to a station
+     * Uses cached distances if available, otherwise makes API call
+     */
+    private double getRoadDistanceFromVehicle(StationData station) {
+        if (vehicleLocation == null) {
+            return Double.MAX_VALUE;
+        }
+        
+        // Create cache key for vehicle location -> station
+        String cacheKey = String.format("%.6f_%.6f_%s", 
+                vehicleLocation.latitude, vehicleLocation.longitude, station.stationId);
+        
+        // Check if we have cached distance
+        if (vehicleLocationDistanceCache.containsKey(cacheKey)) {
+            return vehicleLocationDistanceCache.get(cacheKey);
+        }
+        
+        // Check if vehicle is at a known station location (exact match within small tolerance)
+        final double LOCATION_TOLERANCE = 0.0001; // ~11 meters
+        for (StationData routeStation : currentRoute) {
+            double latDiff = Math.abs(routeStation.latitude - vehicleLocation.latitude);
+            double lngDiff = Math.abs(routeStation.longitude - vehicleLocation.longitude);
+            
+            if (latDiff < LOCATION_TOLERANCE && lngDiff < LOCATION_TOLERANCE) {
+                // Vehicle is at this station, check if we have cached distance to target station
+                String stationCacheKey = routeStation.stationId.compareTo(station.stationId) < 0 
+                        ? routeStation.stationId + "_" + station.stationId 
+                        : station.stationId + "_" + routeStation.stationId;
+                
+                if (roadDistanceCache.containsKey(stationCacheKey)) {
+                    double cachedDistance = roadDistanceCache.get(stationCacheKey);
+                    // Cache it for vehicle location too
+                    vehicleLocationDistanceCache.put(cacheKey, cachedDistance);
+                    return cachedDistance;
+                }
+            }
+        }
+        
+        // If vehicle location doesn't match any station, calculate Haversine first
+        double haversineDistance = calculateHaversineDistance(vehicleLocation, 
+                new LatLng(station.latitude, station.longitude));
+        
+        // If Haversine distance is > 200m, road distance will definitely be > 100m
+        if (haversineDistance > 200.0) {
+            vehicleLocationDistanceCache.put(cacheKey, haversineDistance); // Cache as approximation
+            return haversineDistance; // Safe to return as it's definitely > 100m
+        }
+        
+        // For closer distances (< 200m Haversine), we need accurate road distance
+        // Make API call asynchronously
+        getRoadDistanceAsyncFromLocation(vehicleLocation, station, cacheKey);
+        
+        // Return Haversine as approximation (will be updated when API call completes)
+        return haversineDistance;
+    }
+    
+    /**
+     * Get road distance asynchronously from a specific location to a station
+     */
+    private void getRoadDistanceAsyncFromLocation(LatLng fromLocation, StationData toStation, String cacheKey) {
+        // Check if already in cache (avoid duplicate API calls)
+        if (vehicleLocationDistanceCache.containsKey(cacheKey)) {
+            return;
+        }
+        
+        String url = buildDirectionsUrl(fromLocation.latitude, fromLocation.longitude, 
+                toStation.latitude, toStation.longitude);
+        
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                response -> {
+                    try {
+                        JSONArray routes = response.getJSONArray("routes");
+                        if (routes.length() > 0) {
+                            JSONObject route = routes.getJSONObject(0);
+                            JSONArray legs = route.getJSONArray("legs");
+                            if (legs.length() > 0) {
+                                JSONObject leg = legs.getJSONObject(0);
+                                JSONObject distance = leg.getJSONObject("distance");
+                                double distanceInMeters = distance.getDouble("value");
+                                
+                                Log.d(TAG, "Road distance from vehicle to " + toStation.stationName + 
+                                      ": " + distanceInMeters + " meters");
+                                
+                                // Cache the distance
+                                vehicleLocationDistanceCache.put(cacheKey, distanceInMeters);
+                                
+                                // Re-check proximity with accurate distance
+                                runOnUiThread(() -> checkProximityToStations());
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing road distance response", e);
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Error getting road distance from vehicle location", error);
+                });
+        
+        if (requestQueue != null) {
+            requestQueue.add(request);
+        }
+    }
+    
+    /**
+     * Calculate distance between two LatLng points in meters using Haversine formula
+     */
+    private double calculateHaversineDistance(LatLng point1, LatLng point2) {
+        final int EARTH_RADIUS = 6371000; // Earth radius in meters
+        
+        double lat1Rad = Math.toRadians(point1.latitude);
+        double lat2Rad = Math.toRadians(point2.latitude);
+        double deltaLatRad = Math.toRadians(point2.latitude - point1.latitude);
+        double deltaLngRad = Math.toRadians(point2.longitude - point1.longitude);
+        
+        double a = Math.sin(deltaLatRad / 2) * Math.sin(deltaLatRad / 2) +
+                   Math.cos(lat1Rad) * Math.cos(lat2Rad) *
+                   Math.sin(deltaLngRad / 2) * Math.sin(deltaLngRad / 2);
+        
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        
+        return EARTH_RADIUS * c;
+    }
+    
+    /**
+     * Show arrival card with station information
+     */
+    private void showArrivalCard(StationData station) {
+        if (station == null) {
+            Log.w(TAG, "showArrivalCard: station is null");
+            return;
+        }
+        
+        if (arrivalCardContainer == null) {
+            Log.w(TAG, "showArrivalCard: arrivalCardContainer is null, trying to find it again");
+            // The include view IS the container (root LinearLayout)
+            arrivalCardContainer = findViewById(R.id.arrival_card_include);
+            if (arrivalCardContainer == null) {
+                // Fallback: try container ID
+                arrivalCardContainer = findViewById(R.id.arrival_card_container);
+            }
+            if (arrivalCardContainer == null) {
+                Log.e(TAG, "showArrivalCard: Cannot find arrival_card_include or arrival_card_container");
+                return;
+            }
+            // Re-initialize views if container was found (IDs are merged, so find directly)
+            tvStationNameArrival = findViewById(R.id.tv_station_name_arrival);
+            tvStationTypeText = findViewById(R.id.tv_station_type_text);
+            ivStationTypeIcon = findViewById(R.id.iv_station_type_icon);
+            ivStationTypeArrow = findViewById(R.id.iv_station_type_arrow);
+            tvCyclesCount = findViewById(R.id.tv_cycles_count);
+            tvCyclesLabel = findViewById(R.id.tv_cycles_label);
+            btnStartAction = findViewById(R.id.btn_start_action);
+            cardStationType = findViewById(R.id.card_station_type);
+            Log.d(TAG, "showArrivalCard: Found arrival card container on retry");
+        }
+        
+        Log.d(TAG, "showArrivalCard: Showing card for station: " + station.stationName);
+        
+        // Update station name
+        if (tvStationNameArrival != null) {
+            tvStationNameArrival.setText(station.stationName);
+        }
+        
+        // Update station type (Pick Up or Drop Off)
+        boolean isPickup = "pickup".equals(station.stationType);
+        
+        if (tvStationTypeText != null) {
+            tvStationTypeText.setText(isPickup ? "Pick Up Station" : "Drop Off Station");
+        }
+        
+        // Update button background color (light blue for pickup, red/maroon for drop)
+        if (cardStationType != null) {
+            int backgroundColor = isPickup ? Color.parseColor("#2196F3") : Color.parseColor("#8B0000");
+            cardStationType.setCardBackgroundColor(backgroundColor);
+        }
+        
+        // Update arrow icon (up for pickup, down for drop)
+        if (ivStationTypeArrow != null) {
+            int arrowRes = isPickup ? R.drawable.up_arrow : R.drawable.down_arrow;
+            ivStationTypeArrow.setImageResource(arrowRes);
+        }
+        
+        // Update cycles count
+        if (tvCyclesCount != null) {
+            tvCyclesCount.setText(String.valueOf(station.cyclesToMove));
+        }
+        
+        // Update cycles label
+        if (tvCyclesLabel != null) {
+            tvCyclesLabel.setText(isPickup ? "Cycles To Pick Up" : "Cycles To Drop Off");
+        }
+        
+        // Update action button
+        if (btnStartAction != null) {
+            btnStartAction.setText(isPickup ? "Start Pick Up" : "Start Drop Off");
+            // Set button icon (up arrow for pickup, down arrow for drop)
+            Drawable iconDrawable = ContextCompat.getDrawable(this, 
+                isPickup ? R.drawable.up_arrow : R.drawable.down_arrow);
+            if (iconDrawable != null) {
+                iconDrawable.setColorFilter(Color.WHITE, PorterDuff.Mode.SRC_ATOP);
+                btnStartAction.setCompoundDrawablesWithIntrinsicBounds(iconDrawable, null, null, null);
+                btnStartAction.setCompoundDrawablePadding(8);
+            }
+            btnStartAction.setOnClickListener(v -> {
+                // Handle start action
+                handleStartAction(station, isPickup);
+            });
+        }
+        
+        // Show the card - ensure it's on UI thread
+        arrivalCardContainer.setVisibility(View.VISIBLE);
+        
+        // Force layout update
+        arrivalCardContainer.requestLayout();
+        arrivalCardContainer.invalidate();
+        
+        Log.d(TAG, "showArrivalCard: Card visibility set to VISIBLE");
+        Log.d(TAG, "showArrivalCard: Container visibility check: " + 
+              (arrivalCardContainer.getVisibility() == View.VISIBLE ? "VISIBLE" : 
+               arrivalCardContainer.getVisibility() == View.GONE ? "GONE" : "INVISIBLE"));
+        Log.d(TAG, "showArrivalCard: Container parent: " + 
+              (arrivalCardContainer.getParent() != null ? arrivalCardContainer.getParent().getClass().getSimpleName() : "null"));
+        
+        // Update button position - move it below the card
+        updateButtonPosition();
+    }
+    
+    /**
+     * Update button position when arrival card is shown/hidden
+     */
+    private void updateButtonPosition() {
+        if (redistributionFinishedBtn == null) {
+            return;
+        }
+        
+        // When card is shown, hide the button (card covers it)
+        // When card is hidden, show the button at bottom
+        if (arrivalCardContainer != null && arrivalCardContainer.getVisibility() == View.VISIBLE) {
+            redistributionFinishedBtn.setVisibility(View.GONE);
+        } else {
+            redistributionFinishedBtn.setVisibility(View.VISIBLE);
+        }
+    }
+    
+    /**
+     * Hide arrival card
+     */
+    private void hideArrivalCard() {
+        if (arrivalCardContainer != null) {
+            arrivalCardContainer.setVisibility(View.GONE);
+        }
+        // Show button when card is hidden
+        if (redistributionFinishedBtn != null) {
+            redistributionFinishedBtn.setVisibility(View.VISIBLE);
+        }
+    }
+    
+    /**
+     * Draw a circle overlay on the map to highlight 100m radius around the station
+     * Works for both pickup and drop stations
+     */
+    private void drawStationRadiusCircle(StationData station) {
+        if (googleMap == null || station == null) {
+            return;
+        }
+        
+        // Remove existing circle if any
+        removeStationRadiusCircle();
+        
+        LatLng stationLocation = new LatLng(station.latitude, station.longitude);
+        
+        // Determine circle color based on station type
+        boolean isPickup = "pickup".equals(station.stationType);
+        int fillColor, strokeColor;
+        
+        if (isPickup) {
+            // Green for pickup stations
+            fillColor = Color.argb(30, 76, 175, 80); // Light green with transparency
+            strokeColor = Color.argb(150, 76, 175, 80); // More opaque green for border
+        } else {
+            // Blue for drop stations
+            fillColor = Color.argb(30, 102, 178, 255); // Light blue with transparency
+            strokeColor = Color.argb(150, 102, 178, 255); // More opaque blue for border
+        }
+        
+        // Create circle with 100m radius
+        stationRadiusCircle = googleMap.addCircle(new CircleOptions()
+                .center(stationLocation)
+                .radius(PROXIMITY_RADIUS_METERS)
+                .fillColor(fillColor)
+                .strokeColor(strokeColor)
+                .strokeWidth(3f));
+        
+        Log.d(TAG, "Drew radius circle for " + (isPickup ? "pickup" : "drop") + 
+              " station: " + station.stationName);
+    }
+    
+    /**
+     * Remove the station radius circle from the map
+     */
+    private void removeStationRadiusCircle() {
+        if (stationRadiusCircle != null) {
+            stationRadiusCircle.remove();
+            stationRadiusCircle = null;
+        }
+    }
+    
+    /**
+     * Handle start action button click (Pick Up or Drop Off)
+     */
+    private void handleStartAction(StationData station, boolean isPickup) {
+        String action = isPickup ? "Pick Up" : "Drop Off";
+        Log.d(TAG, "Start " + action + " action for station: " + station.stationName);
+        
+        // Launch QR scanner activity
+        Intent intent = new Intent(this, RedistributionQRScannerActivity.class);
+        intent.putExtra("station_id", station.stationId);
+        intent.putExtra("station_name", station.stationName);
+        intent.putExtra("station_type", station.stationType);
+        intent.putExtra("cycles_to_move", station.cyclesToMove);
+        startActivity(intent);
+    }
+    
     private void handleRedistributionFinished() {
         // Show confirmation dialog before setting demand to 0
         new AlertDialog.Builder(this)
@@ -2527,6 +3173,22 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
     
     @Override
     protected void onDestroy() {
+        // Stop location tracking
+        if (vehicleLocationRef != null && vehicleLocationListener != null) {
+            vehicleLocationRef.removeEventListener(vehicleLocationListener);
+            vehicleLocationListener = null;
+            vehicleLocationRef = null;
+        }
+        
+        // Remove circle overlay
+        removeStationRadiusCircle();
+        
+        // Remove vehicle location marker
+        if (vehicleLocationMarker != null) {
+            vehicleLocationMarker.remove();
+            vehicleLocationMarker = null;
+        }
+        
         if (mapView != null) mapView.onDestroy();
         super.onDestroy();
     }
