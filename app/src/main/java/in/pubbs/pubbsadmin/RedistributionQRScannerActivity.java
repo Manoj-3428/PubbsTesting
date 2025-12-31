@@ -38,6 +38,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import in.pubbs.pubbsadmin.Model.StationData;
+import in.pubbs.pubbsadmin.View.CustomAnimationDialog;
 
 public class RedistributionQRScannerActivity extends AppCompatActivity {
 
@@ -66,21 +67,18 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
     private String currentStationName;
     private int cyclesToMove;
     
-    // Bluetooth and unlocking (COMMENTED OUT - using UI-based cycle tracking instead)
-    // private BluetoothAdapter bluetoothAdapter;
-    // private CustomAnimationDialog cad;
-    // private BroadcastReceiver broadcastReceiver;
-    // private String scannedQRCode; // Store scanned QR code (MAC address)
-    // private boolean isProcessingUnlock = false; // Prevent multiple unlock attempts
+    // Bluetooth and unlocking (RESTORED - using actual QR code scanning)
+    private BluetoothAdapter bluetoothAdapter;
+    private CustomAnimationDialog cad;
+    private BroadcastReceiver broadcastReceiver;
+    private String scannedQRCode; // Store scanned QR code (MAC address)
+    private boolean isProcessingUnlock = false; // Prevent multiple unlock attempts
     
-    // Scanning line animation
+    // Scanning line animation (KEPT - for visual feedback during QR scanning)
     private Handler animationHandler = new Handler();
     private Runnable animationRunnable;
     private int scanningLinePosition = 0;
     private boolean scanningDirection = true; // true = down, false = up
-    private boolean wasAtBottom = false; // Track if line reached bottom
-    private boolean isCycleInProgress = false; // Track if a cycle is being processed
-    private AlertDialog successDialog; // Success dialog for cycle completion
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,8 +93,8 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         
         isPickup = "pickup".equals(stationType);
         
-        // Initialize Bluetooth (COMMENTED OUT - using UI-based cycle tracking instead)
-        // bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        // Initialize Bluetooth (RESTORED - using actual QR code scanning)
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         
         // Initialize UI
         initViews();
@@ -123,8 +121,8 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         // Initialize camera and QR scanner
         initCamera();
         
-        // Register broadcast receiver for lock events (COMMENTED OUT)
-        // registerBroadcastReceiver();
+        // Register broadcast receiver for lock events (RESTORED)
+        registerBroadcastReceiver();
     }
     
     private void initViews() {
@@ -178,6 +176,12 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         if (tvCyclesLabel != null) {
             tvCyclesLabel.setText(isPickupStation ? "Cycles To Pick Up" : "Cycles To Drop Off");
         }
+        
+        // Update instruction text based on station type
+        TextView tvInstruction = findViewById(R.id.tv_instruction);
+        if (tvInstruction != null) {
+            tvInstruction.setText(isPickupStation ? "Scan QR Code to unlock the bicycle" : "Scan QR Code to lock the bicycle");
+        }
     }
     
     private void initCamera() {
@@ -204,18 +208,24 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
                 .setAutoFocusEnabled(true)
                 .build();
         
-        // Set up barcode detector processor (dummy processor - using UI-based cycle tracking instead)
-        // We set an empty processor to prevent "Detector processor must first be set" errors
+        // Set up barcode detector processor (RESTORED - using actual QR code scanning)
         barcodeDetector.setProcessor(new Detector.Processor<Barcode>() {
             @Override
             public void release() {
-                // Cleanup - nothing to do
+                // Cleanup
             }
             
             @Override
             public void receiveDetections(Detector.Detections<Barcode> detections) {
-                // Empty - we're using UI-based cycle tracking (scanning line animation) instead of QR detection
-                // This processor is just here to prevent errors from the camera source
+                barcodes = detections.getDetectedItems();
+                if (barcodes.size() > 0 && !isProcessingUnlock) {
+                    Barcode barcode = barcodes.valueAt(0);
+                    String qrCode = barcode.displayValue;
+                    Log.d(TAG, "QR Code scanned: " + qrCode);
+                    
+                    // Handle QR code scan (process on main thread)
+                    runOnUiThread(() -> handleQRCodeScanned(qrCode));
+                }
             }
         });
         
@@ -252,16 +262,17 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         }
     }
     
+    // Scanning line animation (KEPT - for visual feedback during QR scanning)
     private void startScanningLineAnimation() {
         if (qrOverlay == null) {
             return;
         }
         
-        // Animate scanning line position and track cycle completion
+        // Animate scanning line position (visual feedback only, not used for cycle tracking)
         animationRunnable = new Runnable() {
             @Override
             public void run() {
-                if (qrOverlay != null && !isCycleInProgress) {
+                if (qrOverlay != null) {
                     int maxPosition = qrOverlay.getScanningAreaSize();
                     if (maxPosition == 0) {
                         // Calculate based on overlay width if not yet set
@@ -273,41 +284,16 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
                         scanningLinePosition += 3;
                         if (scanningLinePosition >= maxPosition) {
                             scanningDirection = false;
-                            wasAtBottom = true; // Line reached bottom
                         }
                     } else {
                         // Moving up
                         scanningLinePosition -= 3;
                         if (scanningLinePosition <= 0) {
                             scanningDirection = true;
-                            // Cycle completed: went down and came back up
-                            if (wasAtBottom) {
-                                wasAtBottom = false;
-                                handleCycleCompleted();
-                            }
                         }
                     }
                     qrOverlay.updateScanningLine(scanningLinePosition);
                     animationHandler.postDelayed(this, 16); // ~60 FPS
-                } else if (qrOverlay != null) {
-                    // Continue animation even when cycle is in progress
-                    int maxPosition = qrOverlay.getScanningAreaSize();
-                    if (maxPosition == 0) {
-                        maxPosition = (int) (qrOverlay.getWidth() * 0.75f);
-                    }
-                    if (scanningDirection) {
-                        scanningLinePosition += 3;
-                        if (scanningLinePosition >= maxPosition) {
-                            scanningDirection = false;
-                        }
-                    } else {
-                        scanningLinePosition -= 3;
-                        if (scanningLinePosition <= 0) {
-                            scanningDirection = true;
-                        }
-                    }
-                    qrOverlay.updateScanningLine(scanningLinePosition);
-                    animationHandler.postDelayed(this, 16);
                 }
             }
         };
@@ -321,95 +307,7 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         }
     }
     
-    /**
-     * Handle cycle completion when scanning line completes a cycle (down then up)
-     */
-    private void handleCycleCompleted() {
-        if (cyclesToMove <= 0) {
-            return; // No more cycles to process
-        }
-        
-        runOnUiThread(() -> {
-            // Decrement cycle count
-            cyclesToMove--;
-            
-            // Update main screen count
-            if (tvCyclesCount != null) {
-                tvCyclesCount.setText(String.valueOf(cyclesToMove));
-            }
-            
-            // Show success dialog
-            showCycleSuccessDialog();
-        });
-    }
-    
-    /**
-     * Show success dialog after cycle completion
-     */
-    private void showCycleSuccessDialog() {
-        // Dismiss previous dialog if showing
-        if (successDialog != null && successDialog.isShowing()) {
-            successDialog.dismiss();
-        }
-        
-        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_cycle_success, null);
-        
-        TextView tvSuccessMessage = dialogView.findViewById(R.id.tv_success_message);
-        TextView tvDialogCyclesCount = dialogView.findViewById(R.id.tv_dialog_cycles_count);
-        TextView tvDialogCyclesLabel = dialogView.findViewById(R.id.tv_dialog_cycles_label);
-        Button btnAction = dialogView.findViewById(R.id.btn_action);
-        
-        // Update success message
-        if (tvSuccessMessage != null) {
-            if (cyclesToMove == 0) {
-                tvSuccessMessage.setText(isPickup ? "Successfully Picked Up All Cycles!" : "Successfully Dropped Off All Cycles!");
-            } else {
-                tvSuccessMessage.setText(isPickup ? "Successfully Picked Up Cycle!" : "Successfully Dropped Off Cycle!");
-            }
-        }
-        
-        // Update cycle count in dialog
-        if (tvDialogCyclesCount != null) {
-            tvDialogCyclesCount.setText(String.valueOf(cyclesToMove));
-        }
-        
-        // Update cycle label
-        if (tvDialogCyclesLabel != null) {
-            tvDialogCyclesLabel.setText(isPickup ? "Cycles To Pick Up" : "Cycles To Drop Off");
-        }
-        
-        // Update action button
-        if (btnAction != null) {
-            if (cyclesToMove == 0) {
-                btnAction.setText("Continue Ride");
-                btnAction.setOnClickListener(v -> {
-                    successDialog.dismiss();
-                    finish(); // Go back to redistribution screen
-                });
-            } else {
-                btnAction.setText(isPickup ? "Pick Another" : "Drop Another");
-                btnAction.setOnClickListener(v -> {
-                    successDialog.dismiss();
-                    isCycleInProgress = false; // Allow next cycle
-                    wasAtBottom = false; // Reset tracking
-                });
-            }
-        }
-        
-        successDialog = new AlertDialog.Builder(this)
-                .setView(dialogView)
-                .setCancelable(false)
-                .create();
-        
-        successDialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        successDialog.show();
-        
-        // Prevent new cycles while dialog is showing
-        isCycleInProgress = true;
-    }
-    
-    // COMMENTED OUT - Unlock logic (using UI-based cycle tracking instead)
-    /*
+    // RESTORED - Unlock logic (using actual QR code scanning)
     private void handleQRCodeScanned(String qrCode) {
         if (isProcessingUnlock) {
             Log.d(TAG, "Already processing unlock, ignoring duplicate scan");
@@ -431,10 +329,7 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         // Start unlock process
         connectToLock();
     }
-    */
     
-    // COMMENTED OUT - Unlock logic (using UI-based cycle tracking instead)
-    /*
     // Connect to lock via Bluetooth
     private void connectToLock() {
         if (scannedQRCode == null || scannedQRCode.length() < 12) {
@@ -480,19 +375,20 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         }
     }
     
-    // Send unlock command to connected lock
+    // Send lock/unlock command to connected lock based on station type
     private void sendUnlockCommand() {
         if (scannedQRCode == null || scannedQRCode.length() < 12) {
             Toast.makeText(this, "MAC Address incorrect", Toast.LENGTH_SHORT).show();
             return;
         }
         
-        Intent intent = new Intent(Utility.OPEN_LOCK);
+        // For pickup stations: unlock, for drop stations: lock
+        Intent intent = new Intent(isPickup ? Utility.OPEN_LOCK : Utility.CLOSE_LOCK);
         intent.putExtra("address", scannedQRCode);
         sendBroadcast(intent);
         
         if (cad != null) {
-            cad.setTitle("Unlocking...");
+            cad.setTitle(isPickup ? "Unlocking..." : "Locking...");
         }
     }
     
@@ -557,29 +453,61 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
                         break;
                         
                     case Utility.LOCK_OPENED:
-                        Log.d(TAG, "Lock opened successfully!");
-                        
-                        if (cad != null && cad.isShowing()) {
-                            cad.dismiss();
-                        }
-                        
-                        runOnUiThread(() -> {
-                            Toast.makeText(RedistributionQRScannerActivity.this, 
-                                "Lock opened!", Toast.LENGTH_SHORT).show();
+                        // Handle unlock success (for pickup stations)
+                        if (isPickup) {
+                            Log.d(TAG, "Lock opened successfully!");
                             
-                            // Update station cycle count in Firebase
-                            updateStationCycleCount();
-                            
-                            // Reset processing flag
-                            isProcessingUnlock = false;
-                            scannedQRCode = null;
-                            
-                            // Update cycles count in UI
-                            if (tvCyclesCount != null && cyclesToMove > 0) {
-                                cyclesToMove--;
-                                tvCyclesCount.setText(String.valueOf(cyclesToMove));
+                            if (cad != null && cad.isShowing()) {
+                                cad.dismiss();
                             }
-                        });
+                            
+                            runOnUiThread(() -> {
+                                Toast.makeText(RedistributionQRScannerActivity.this, 
+                                    "Lock opened!", Toast.LENGTH_SHORT).show();
+                                
+                                // Update station cycle count in Firebase
+                                updateStationCycleCount();
+                                
+                                // Reset processing flag
+                                isProcessingUnlock = false;
+                                scannedQRCode = null;
+                                
+                                // Update cycles count in UI
+                                if (tvCyclesCount != null && cyclesToMove > 0) {
+                                    cyclesToMove--;
+                                    tvCyclesCount.setText(String.valueOf(cyclesToMove));
+                                }
+                            });
+                        }
+                        break;
+                        
+                    case Utility.MANUAL_LOCKED:
+                        // Handle lock success (for drop stations)
+                        if (!isPickup) {
+                            Log.d(TAG, "Lock closed successfully!");
+                            
+                            if (cad != null && cad.isShowing()) {
+                                cad.dismiss();
+                            }
+                            
+                            runOnUiThread(() -> {
+                                Toast.makeText(RedistributionQRScannerActivity.this, 
+                                    "Lock closed!", Toast.LENGTH_SHORT).show();
+                                
+                                // Update station cycle count in Firebase
+                                updateStationCycleCount();
+                                
+                                // Reset processing flag
+                                isProcessingUnlock = false;
+                                scannedQRCode = null;
+                                
+                                // Update cycles count in UI
+                                if (tvCyclesCount != null && cyclesToMove > 0) {
+                                    cyclesToMove--;
+                                    tvCyclesCount.setText(String.valueOf(cyclesToMove));
+                                }
+                            });
+                        }
                         break;
                         
                     case Utility.RIDE_ENDED:
@@ -602,8 +530,6 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         }
     }
     
-    // COMMENTED OUT - Unlock logic (using UI-based cycle tracking instead)
-    /*
     // Update station cycle count in Firebase after successful unlock
     private void updateStationCycleCount() {
         if (scannedQRCode == null) {
@@ -680,7 +606,6 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
             Toast.makeText(this, "Failed to fetch bicycle data", Toast.LENGTH_SHORT).show();
         });
     }
-    */
     
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -706,13 +631,7 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         }
         stopScanningLineAnimation();
         
-        // Dismiss success dialog if showing
-        if (successDialog != null && successDialog.isShowing()) {
-            successDialog.dismiss();
-        }
-        
-        // COMMENTED OUT - Unlock logic (using UI-based cycle tracking instead)
-        /*
+        // RESTORED - Unlock logic (using actual QR code scanning)
         // Unregister broadcast receiver
         if (broadcastReceiver != null) {
             try {
@@ -731,7 +650,6 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         if (cad != null && cad.isShowing()) {
             cad.dismiss();
         }
-        */
     }
     
     @Override
@@ -742,13 +660,7 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         }
         stopScanningLineAnimation();
         
-        // Dismiss success dialog if showing
-        if (successDialog != null && successDialog.isShowing()) {
-            successDialog.dismiss();
-        }
-        
-        // COMMENTED OUT - Unlock logic (using UI-based cycle tracking instead)
-        /*
+        // RESTORED - Unlock logic (using actual QR code scanning)
         // Unregister receiver when paused
         if (broadcastReceiver != null) {
             try {
@@ -757,15 +669,13 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
                 Log.e(TAG, "Error unregistering receiver in onPause", e);
             }
         }
-        */
     }
     
     @Override
     protected void onResume() {
         super.onResume();
         
-        // COMMENTED OUT - Unlock logic (using UI-based cycle tracking instead)
-        /*
+        // RESTORED - Unlock logic (using actual QR code scanning)
         // Re-register broadcast receiver
         if (broadcastReceiver != null) {
             try {
@@ -778,7 +688,6 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
                 Log.e(TAG, "Error registering receiver in onResume", e);
             }
         }
-        */
         
         if (cameraSource != null && surfaceView.getHolder().getSurface().isValid()) {
             try {
@@ -792,8 +701,7 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
         }
     }
     
-    // COMMENTED OUT - Unlock logic (using UI-based cycle tracking instead)
-    /*
+    // RESTORED - Unlock logic (using actual QR code scanning)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -810,6 +718,5 @@ public class RedistributionQRScannerActivity extends AppCompatActivity {
             }
         }
     }
-    */
 }
 
