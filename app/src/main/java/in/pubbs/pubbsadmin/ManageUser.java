@@ -11,10 +11,16 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -40,6 +46,7 @@ public class ManageUser extends AppCompatActivity implements View.OnClickListene
     RecyclerView recyclerView;
     RecyclerView.LayoutManager layoutManager;
     ArrayList<Map<String, Object>> list = new ArrayList();
+    ArrayList<Map<String, Object>> filteredList = new ArrayList();
     ManageUserAdapter manageUserAdapter;
     DatabaseReference databaseReference;
     String TAG = ManageUser.class.getSimpleName();
@@ -47,6 +54,8 @@ public class ManageUser extends AppCompatActivity implements View.OnClickListene
     private CustomLoader customLoader;//Loader
     ConstraintLayout noData;
     SwipeRefreshLayout swipeRefresh;
+    EditText searchEditText;
+    ImageView clearButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +81,9 @@ public class ManageUser extends AppCompatActivity implements View.OnClickListene
         customLoader = new CustomLoader(this, R.style.WideDialog);
         customLoader.show();
         noData = findViewById(R.id.no_data_found);
+        searchEditText = findViewById(R.id.search_edit_text);
+        clearButton = findViewById(R.id.clear_button);
+        setupSearchFilter();
         loadData();
         swipeRefresh.setOnRefreshListener(() -> {
             customLoader.show();
@@ -79,6 +91,98 @@ public class ManageUser extends AppCompatActivity implements View.OnClickListene
             loadData();
             swipeRefresh.setRefreshing(false);
         });
+    }
+    
+    private void setupSearchFilter() {
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterUsers(s.toString());
+                // Show/hide clear button based on text
+                if (s.length() > 0) {
+                    clearButton.setVisibility(View.VISIBLE);
+                } else {
+                    clearButton.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        
+        // Clear button click listener
+        clearButton.setOnClickListener(v -> {
+            searchEditText.setText("");
+            clearButton.setVisibility(View.GONE);
+            // Hide keyboard
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+            }
+            searchEditText.clearFocus();
+        });
+        
+        // Handle keyboard done/search action
+        searchEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    // Hide keyboard
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+                    }
+                    // Remove focus from search field
+                    searchEditText.clearFocus();
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+    
+    private void filterUsers(String searchText) {
+        filteredList.clear();
+        
+        if (searchText.isEmpty()) {
+            filteredList.addAll(list);
+        } else {
+            String searchLower = searchText.toLowerCase().trim();
+            for (Map<String, Object> user : list) {
+                String name = user.get("name") != null ? user.get("name").toString().toLowerCase() : "";
+                String mobile = user.get("mobile") != null ? user.get("mobile").toString().toLowerCase() : "";
+                
+                if (name.contains(searchLower) || mobile.contains(searchLower)) {
+                    filteredList.add(user);
+                }
+            }
+        }
+        
+        updateRecyclerView();
+    }
+    
+    private void updateRecyclerView() {
+        if (filteredList.size() == 0) {
+            noData.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+        } else {
+            noData.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+            
+            // Reuse adapter if it exists, otherwise create new one
+            if (manageUserAdapter == null) {
+                manageUserAdapter = new ManageUserAdapter(filteredList, ManageUser.this);
+                recyclerView.setAdapter(manageUserAdapter);
+            } else {
+                // Update existing adapter's data
+                manageUserAdapter.updateList(filteredList);
+            }
+        }
     }
 
     @Override
@@ -122,33 +226,62 @@ public class ManageUser extends AppCompatActivity implements View.OnClickListene
 
     private void loadData() {
         list.clear();
+        String organisationName = Objects.requireNonNull(sharedPreferences.getString("organisationName", null));
+        if (organisationName == null || organisationName.isEmpty()) {
+            customLoader.dismiss();
+            noData.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+            return;
+        }
+        
+        String orgNameFilter = organisationName.replaceAll(" ", "");
+        Log.d(TAG, "Loading users for organisation: " + orgNameFilter);
+        
         databaseReference = FirebaseDatabase.getInstance().getReference("Users");
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                long startTime = System.currentTimeMillis();
+                int count = 0;
+                
                 for (DataSnapshot i : dataSnapshot.getChildren()) {
-                    Log.d(TAG, "Phone Number: " + i.child("mobile").getValue() + "Name: " + i.child("name").getValue());
-                    Map<String, Object> data = (Map<String, Object>) i.getValue();
-                    if (i.child("operator").exists() && Objects.requireNonNull(i.child("operator").getValue()).toString().trim().equalsIgnoreCase(Objects.requireNonNull(sharedPreferences.getString("organisationName", null)).replaceAll(" ", ""))) {
-                        list.add(data);
-                        //noData.setVisibility(View.GONE);
-                    } /*else {
-                        //noData.setVisibility(View.VISIBLE);
-                    }*/
+                    // Quick check if operator exists before processing
+                    if (i.child("operator").exists()) {
+                        String operator = i.child("operator").getValue() != null ? 
+                            i.child("operator").getValue().toString().trim() : "";
+                        
+                        if (operator.equalsIgnoreCase(orgNameFilter)) {
+                            try {
+                                Map<String, Object> data = (Map<String, Object>) i.getValue();
+                                if (data != null) {
+                                    list.add(data);
+                                    count++;
+                                }
+                            } catch (Exception e) {
+                                Log.e(TAG, "Error parsing user data: " + e.getMessage());
+                            }
+                        }
+                    }
                 }
-                if(list.size()==0){
-                    noData.setVisibility(View.VISIBLE);
-                }else {
-                    manageUserAdapter = new ManageUserAdapter(list, ManageUser.this);
-                    recyclerView.setAdapter(manageUserAdapter);
-                    manageUserAdapter.notifyDataSetChanged();
-                }
+                
+                long endTime = System.currentTimeMillis();
+                Log.d(TAG, "Loaded " + count + " users in " + (endTime - startTime) + "ms");
+                
+                // Update filtered list with all data
+                filteredList.clear();
+                filteredList.addAll(list);
+                
+                // Update recyclerview
+                updateRecyclerView();
                 customLoader.dismiss();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                Log.e(TAG, "Error loading users: " + databaseError.getMessage());
+                customLoader.dismiss();
+                noData.setVisibility(View.VISIBLE);
+                recyclerView.setVisibility(View.GONE);
             }
         });
     }

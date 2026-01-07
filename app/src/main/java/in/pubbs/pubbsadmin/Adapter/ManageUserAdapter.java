@@ -1,6 +1,7 @@
 package in.pubbs.pubbsadmin.Adapter;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import in.pubbs.pubbsadmin.R;
+import in.pubbs.pubbsadmin.UserDetailActivity;
 
 public class ManageUserAdapter extends RecyclerView.Adapter<ManageUserAdapter.HolderClass> {
     ArrayList<Map<String, Object>> list;
@@ -22,6 +24,11 @@ public class ManageUserAdapter extends RecyclerView.Adapter<ManageUserAdapter.Ho
     public ManageUserAdapter(ArrayList list, Context context) {
         this.list = list;
         this.context = context;
+    }
+    
+    public void updateList(ArrayList<Map<String, Object>> newList) {
+        this.list = newList;
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -42,12 +49,12 @@ public class ManageUserAdapter extends RecyclerView.Adapter<ManageUserAdapter.Ho
         holder.phone.setText("Phone: " + phone);
 
         holder.container.setOnClickListener(v -> {
-           /* Intent intent = new Intent(context, ManageUserDetails.class);
-            intent.putExtra("user_name", userName);
-            intent.putExtra("id", id);
-            intent.putExtra("mobile", phone);
+            // Navigate to UserDetailActivity with user mobile as identifier
+            if (phone != null && !phone.isEmpty()) {
+                Intent intent = new Intent(context, UserDetailActivity.class);
+                intent.putExtra("USER_MOBILE", phone);
             context.startActivity(intent);
-            //Code to be added.*/
+            }
         });
 
     }

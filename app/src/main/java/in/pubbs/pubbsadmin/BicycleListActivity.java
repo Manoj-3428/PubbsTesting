@@ -4,11 +4,18 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -41,10 +48,13 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
     private String TAG = BicycleListActivity.class.getSimpleName();
     private SharedPreferences sharedPreferences;
     private ArrayList<Map<String, Object>> list = new ArrayList<>();
+    private ArrayList<Map<String, Object>> filteredList = new ArrayList<>();
     private LinearLayout noDataFound;
     private CustomLoader customLoader;
     SwipeRefreshLayout swipeRefresh;
     private String type = "";
+    private EditText searchEditText;
+    private ImageView clearButton;
 
 
     @Override
@@ -79,6 +89,107 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
         rv_bicycle_list.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         customLoader = new CustomLoader(this, R.style.WideDialog);//Loader
         customLoader.show();
+        searchEditText = findViewById(R.id.search_edit_text);
+        clearButton = findViewById(R.id.clear_button);
+        setupSearchFilter();
+    }
+    
+    private void setupSearchFilter() {
+        searchEditText.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                filterBicycles(s.toString());
+                // Show/hide clear button based on text
+                if (s.length() > 0) {
+                    clearButton.setVisibility(View.VISIBLE);
+                } else {
+                    clearButton.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+        
+        // Clear button click listener
+        clearButton.setOnClickListener(v -> {
+            searchEditText.setText("");
+            clearButton.setVisibility(View.GONE);
+            // Hide keyboard
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) {
+                imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+            }
+            searchEditText.clearFocus();
+        });
+        
+        // Handle keyboard done/search action
+        searchEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_SEARCH) {
+                    // Hide keyboard
+                    InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
+                    }
+                    // Remove focus from search field
+                    searchEditText.clearFocus();
+                    return true;
+                }
+                return false;
+            }
+        });
+    }
+    
+    private void filterBicycles(String searchText) {
+        filteredList.clear();
+        
+        if (searchText.isEmpty()) {
+            filteredList.addAll(list);
+        } else {
+            String searchLower = searchText.toLowerCase().trim();
+            for (Map<String, Object> bicycle : list) {
+                String bicycleId = bicycle.get("id") != null ? bicycle.get("id").toString().toLowerCase() : "";
+                
+                if (bicycleId.contains(searchLower)) {
+                    filteredList.add(bicycle);
+                }
+            }
+        }
+        
+        updateRecyclerView();
+    }
+    
+    private void updateRecyclerView() {
+        if (filteredList.size() == 0) {
+            rv_bicycle_list.setVisibility(View.GONE);
+            noDataFound.setVisibility(View.VISIBLE);
+        } else {
+            noDataFound.setVisibility(View.GONE);
+            rv_bicycle_list.setVisibility(View.VISIBLE);
+            
+            // Reuse adapter if it exists, otherwise create new one
+            if (bicycleListAdapter == null) {
+                bicycleListAdapter = new BicycleListAdapter(filteredList, BicycleListActivity.this, type);
+                rv_bicycle_list.setAdapter(bicycleListAdapter);
+            } else {
+                // Update existing adapter's data
+                bicycleListAdapter.updateList(filteredList, type);
+            }
+        }
+    }
+    
+    private void clearSearch() {
+        if (searchEditText != null) {
+            searchEditText.setText("");
+            clearButton.setVisibility(View.GONE);
+        }
     }
 
 
@@ -98,6 +209,7 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
             addBicycle.setVisibility(View.VISIBLE);
             Log.d(TAG, "All Cycles");
             tv_title.setText("All Cycles");
+            clearSearch();
             customLoader.show();
             loadData();
             swipeRefresh.setOnRefreshListener(() -> {
@@ -112,6 +224,7 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
             addBicycle.setVisibility(View.VISIBLE);
             Log.d(TAG, "Low Battery Bicycle");
             tv_title.setText("Low Battery Bicycle");
+            clearSearch();
             customLoader.show();
             loadLowBatteryCycle();
             swipeRefresh.setOnRefreshListener(() -> {
@@ -126,6 +239,7 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
             addBicycle.setVisibility(View.VISIBLE);
             Log.d(TAG, "Reported Bicycle");
             tv_title.setText("Reported Bicycle");
+            clearSearch();
             customLoader.show();
             loadReportedCycle();
             swipeRefresh.setOnRefreshListener(() -> {
@@ -140,6 +254,7 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
             addBicycle.setVisibility(View.VISIBLE);
             Log.d(TAG, "Repair Bicycle");
             tv_title.setText("Repair Bicycle");
+            clearSearch();
             customLoader.show();
             loadRepairCycle();
             swipeRefresh.setOnRefreshListener(() -> {
@@ -231,30 +346,39 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                long startTime = System.currentTimeMillis();
+                int count = 0;
+                
                 for (DataSnapshot i : dataSnapshot.getChildren()) {
                     try {
                         Map<String, Object> map = (Map<String, Object>) i.getValue();
-                        list.add(map);
-                    } catch (Exception exc){
-
+                        if (map != null) {
+                            list.add(map);
+                            count++;
+                        }
+                    } catch (Exception exc) {
+                        Log.e(TAG, "Error parsing bicycle data: " + exc.getMessage());
                     }
                 }
-                if (list.size() == 0) {
-                    rv_bicycle_list.setVisibility(View.GONE);
-                    noDataFound.setVisibility(View.VISIBLE);
-                } else {
-                    noDataFound.setVisibility(View.GONE);
-                    rv_bicycle_list.setVisibility(View.VISIBLE);
-                    bicycleListAdapter = new BicycleListAdapter(list, BicycleListActivity.this, type);
-                    rv_bicycle_list.setAdapter(bicycleListAdapter);
-                    bicycleListAdapter.notifyDataSetChanged();
-                }
+                
+                long endTime = System.currentTimeMillis();
+                Log.d(TAG, "Loaded " + count + " bicycles in " + (endTime - startTime) + "ms");
+                
+                // Update filtered list with all data
+                filteredList.clear();
+                filteredList.addAll(list);
+                
+                // Update recyclerview
+                updateRecyclerView();
                 customLoader.dismiss();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                Log.e(TAG, "Error loading bicycles: " + databaseError.getMessage());
+                customLoader.dismiss();
+                noDataFound.setVisibility(View.VISIBLE);
+                rv_bicycle_list.setVisibility(View.GONE);
             }
         });
     }
@@ -268,30 +392,47 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                long startTime = System.currentTimeMillis();
+                int count = 0;
+                
                 for (DataSnapshot i : dataSnapshot.getChildren()) {
                     if (i.child("battery").exists()) {
-                        if (Integer.valueOf(Objects.requireNonNull(i.child("battery").getValue()).toString().replace("", "0")) < 40) {
-                            Map<String, Object> map = (Map<String, Object>) i.getValue();
-                            list.add(map);
+                        try {
+                            String batteryStr = i.child("battery").getValue() != null ? 
+                                i.child("battery").getValue().toString() : "0";
+                            int battery = Integer.parseInt(batteryStr.replaceAll("[^0-9]", ""));
+                            
+                            if (battery < 40) {
+                                Map<String, Object> map = (Map<String, Object>) i.getValue();
+                                if (map != null) {
+                                    list.add(map);
+                                    count++;
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.e(TAG, "Error parsing battery: " + e.getMessage());
                         }
                     }
                 }
-                if (list.size() == 0) {
-                    rv_bicycle_list.setVisibility(View.GONE);
-                    noDataFound.setVisibility(View.VISIBLE);
-                } else {
-                    noDataFound.setVisibility(View.GONE);
-                    rv_bicycle_list.setVisibility(View.VISIBLE);
-                    bicycleListAdapter = new BicycleListAdapter(list, BicycleListActivity.this, type);
-                    rv_bicycle_list.setAdapter(bicycleListAdapter);
-                    bicycleListAdapter.notifyDataSetChanged();
-                }
+                
+                long endTime = System.currentTimeMillis();
+                Log.d(TAG, "Loaded " + count + " low battery bicycles in " + (endTime - startTime) + "ms");
+                
+                // Update filtered list with all data
+                filteredList.clear();
+                filteredList.addAll(list);
+                
+                // Update recyclerview
+                updateRecyclerView();
                 customLoader.dismiss();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                Log.e(TAG, "Error loading low battery bicycles: " + databaseError.getMessage());
+                customLoader.dismiss();
+                noDataFound.setVisibility(View.VISIBLE);
+                rv_bicycle_list.setVisibility(View.GONE);
             }
         });
     }
@@ -299,33 +440,53 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
     private void loadReportedCycle() {
         list.clear();
         type = "";
-        String path = Objects.requireNonNull(sharedPreferences.getString("organisationName", null)).replaceAll(" ", "") + "/ReportCycle";
+        String orgName = sharedPreferences.getString("organisationName", null);
+        if (orgName == null || orgName.isEmpty()) {
+            customLoader.dismiss();
+            noDataFound.setVisibility(View.VISIBLE);
+            rv_bicycle_list.setVisibility(View.GONE);
+            return;
+        }
+        
+        String path = orgName.replaceAll(" ", "") + "/ReportCycle";
         Log.d(TAG, "path: " + path);
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(path);
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                long startTime = System.currentTimeMillis();
+                int count = 0;
+                
                 for (DataSnapshot i : dataSnapshot.getChildren()) {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("id", i.child("bicycleId").getValue());
-                    map.put("status", "Unknown");
-                    list.add(map);
+                    try {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("id", i.child("bicycleId").getValue());
+                        map.put("status", "Unknown");
+                        list.add(map);
+                        count++;
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing reported cycle: " + e.getMessage());
+                    }
                 }
-                if (list.size() == 0) {
-                    rv_bicycle_list.setVisibility(View.GONE);
-                    noDataFound.setVisibility(View.VISIBLE);
-                } else {
-                    rv_bicycle_list.setVisibility(View.VISIBLE);
-                    bicycleListAdapter = new BicycleListAdapter(list, BicycleListActivity.this, type);
-                    rv_bicycle_list.setAdapter(bicycleListAdapter);
-                    bicycleListAdapter.notifyDataSetChanged();
-                }
+                
+                long endTime = System.currentTimeMillis();
+                Log.d(TAG, "Loaded " + count + " reported cycles in " + (endTime - startTime) + "ms");
+                
+                // Update filtered list with all data
+                filteredList.clear();
+                filteredList.addAll(list);
+                
+                // Update recyclerview
+                updateRecyclerView();
                 customLoader.dismiss();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                Log.e(TAG, "Error loading reported cycles: " + databaseError.getMessage());
+                customLoader.dismiss();
+                noDataFound.setVisibility(View.VISIBLE);
+                rv_bicycle_list.setVisibility(View.GONE);
             }
         });
     }
@@ -409,34 +570,54 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
     private void loadRepairCycle() {
         list.clear();
         type = "";
-        String path = Objects.requireNonNull(sharedPreferences.getString("organisationName", null)).replaceAll(" ", "") + "/RepairBicycle";
+        String orgName = sharedPreferences.getString("organisationName", null);
+        if (orgName == null || orgName.isEmpty()) {
+            customLoader.dismiss();
+            noDataFound.setVisibility(View.VISIBLE);
+            rv_bicycle_list.setVisibility(View.GONE);
+            return;
+        }
+        
+        String path = orgName.replaceAll(" ", "") + "/RepairBicycle";
         Log.d(TAG, "path: " + path);
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(path);
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                long startTime = System.currentTimeMillis();
+                int count = 0;
+                
                 for (DataSnapshot i : dataSnapshot.getChildren()) {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("id", i.child("id").getValue());
-                    map.put("battery", i.child("battery").getValue());
-                    map.put("status", "active");
-                    list.add(map);
+                    try {
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("id", i.child("id").getValue());
+                        map.put("battery", i.child("battery").getValue());
+                        map.put("status", "active");
+                        list.add(map);
+                        count++;
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing repair cycle: " + e.getMessage());
+                    }
                 }
-                if (list.size() == 0) {
-                    rv_bicycle_list.setVisibility(View.GONE);
-                    noDataFound.setVisibility(View.VISIBLE);
-                } else {
-                    rv_bicycle_list.setVisibility(View.VISIBLE);
-                    bicycleListAdapter = new BicycleListAdapter(list, BicycleListActivity.this, type);
-                    rv_bicycle_list.setAdapter(bicycleListAdapter);
-                    bicycleListAdapter.notifyDataSetChanged();
-                }
+                
+                long endTime = System.currentTimeMillis();
+                Log.d(TAG, "Loaded " + count + " repair cycles in " + (endTime - startTime) + "ms");
+                
+                // Update filtered list with all data
+                filteredList.clear();
+                filteredList.addAll(list);
+                
+                // Update recyclerview
+                updateRecyclerView();
                 customLoader.dismiss();
             }
 
             @Override
             public void onCancelled(@NonNull DatabaseError databaseError) {
-
+                Log.e(TAG, "Error loading repair cycles: " + databaseError.getMessage());
+                customLoader.dismiss();
+                noDataFound.setVisibility(View.VISIBLE);
+                rv_bicycle_list.setVisibility(View.GONE);
             }
         });
     }

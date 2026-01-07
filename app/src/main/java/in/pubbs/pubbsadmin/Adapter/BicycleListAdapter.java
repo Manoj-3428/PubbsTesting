@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import in.pubbs.pubbsadmin.AddOrRemoveBicycle;
+import in.pubbs.pubbsadmin.BicycleDetailActivity;
 import in.pubbs.pubbsadmin.R;
 
 public class BicycleListAdapter extends RecyclerView.Adapter<BicycleListAdapter.MyViewHolder> {
@@ -35,6 +37,17 @@ public class BicycleListAdapter extends RecyclerView.Adapter<BicycleListAdapter.
         this.list = list;
         this.context = context;
         this.type = type;
+    }
+    
+    public void updateList(ArrayList<Map<String, Object>> newList) {
+        this.list = newList;
+        notifyDataSetChanged();
+    }
+    
+    public void updateList(ArrayList<Map<String, Object>> newList, String newType) {
+        this.list = newList;
+        this.type = newType;
+        notifyDataSetChanged();
     }
 
     public BicycleListAdapter() {
@@ -148,6 +161,21 @@ public void onBindViewHolder(@NonNull BicycleListAdapter.MyViewHolder holder, in
         else {
             holder.status.setBackground(context.getDrawable(R.drawable.solid_circle_red));
         }
+        
+        // Add click listener to navigate to detail activity
+        holder.constraintLayout.setOnClickListener(v -> {
+            String bicycleId = item.containsKey("id") && item.get("id") != null 
+                ? item.get("id").toString() 
+                : null;
+            
+            if (bicycleId != null && !bicycleId.isEmpty()) {
+                Intent detailIntent = new Intent(context, BicycleDetailActivity.class);
+                detailIntent.putExtra("BICYCLE_ID", bicycleId);
+                context.startActivity(detailIntent);
+            } else {
+                Toast.makeText(context, "Bicycle ID not available", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 }
 

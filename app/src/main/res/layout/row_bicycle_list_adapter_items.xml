@@ -1,17 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:paddingHorizontal="@dimen/eight_dp"
-    android:paddingTop="@dimen/eight_dp"
+    android:layout_marginHorizontal="12dp"
+    android:layout_marginVertical="6dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="4dp"
+    app:cardBackgroundColor="@color/white">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
     android:id="@+id/container">
 
     <View
         android:id="@id/status"
-        android:layout_width="10dp"
-        android:layout_height="10dp"
-        android:layout_marginStart="16dp"
+            android:layout_width="12dp"
+            android:layout_height="12dp"
         app:layout_constraintBottom_toBottomOf="@id/iv_bike"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@id/iv_bike"
@@ -19,10 +26,9 @@
 
     <ImageView
         android:id="@+id/iv_bike"
-        android:layout_width="@dimen/fifty_dp"
-        android:layout_height="@dimen/fifty_dp"
+            android:layout_width="56dp"
+            android:layout_height="56dp"
         android:layout_marginStart="12dp"
-        android:layout_marginTop="20dp"
         android:contentDescription="@string/bicycle_icon"
         android:src="@drawable/bike"
         app:layout_constraintStart_toEndOf="@+id/status"
@@ -30,64 +36,57 @@
 
     <TextView
         android:id="@+id/tv_lock_id"
-        android:layout_width="wrap_content"
+            android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:fontFamily="@font/comfortaa_regular"
         android:text="Lock Id"
         android:textAllCaps="true"
         android:textColor="@color/black"
-        android:textSize="14sp"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@+id/chevron_icon"
         app:layout_constraintStart_toEndOf="@id/iv_bike"
         app:layout_constraintTop_toTopOf="@id/iv_bike"
-        android:layout_marginStart="@dimen/eight_dp" />
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp" />
 
     <TextView
         android:id="@+id/battery_hint"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_lock_id"
         app:layout_constraintStart_toEndOf="@id/iv_bike"
         app:layout_constraintTop_toBottomOf="@id/tv_lock_id"
-        android:layout_marginStart="@dimen/eight_dp"
-        android:layout_marginTop="@dimen/twelve_dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginTop="6dp"
         android:fontFamily="@font/comfortaa_regular"
         android:text="Battery:"
-        android:textColor="@color/black"
-        android:textSize="12sp" />
+            android:textColor="#666666"
+            android:textSize="13sp" />
 
-    <!--<TextView
-        android:id="@+id/status"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/tv_lock_id"
-        android:layout_toRightOf="@id/battery_value"
-        android:layout_alignBaseline="@id/battery_value"
-        android:layout_marginLeft="@dimen/twenty_four_dp"
-        android:layout_marginTop="@dimen/five_dp"
-        android:text="Status"
-        android:fontFamily="@font/comfortaa_regular"
-        android:textColor="@color/black"
-        android:textSize="12sp"/>
--->
     <TextView
         android:id="@+id/battery_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:fontFamily="@font/comfortaa_regular"
         android:text="60%"
-        android:textColor="@color/black"
-        android:textSize="12sp"
+            android:textColor="#666666"
+            android:textSize="13sp"
         app:layout_constraintStart_toEndOf="@+id/battery_hint"
         app:layout_constraintTop_toBottomOf="@id/tv_lock_id"
-        android:layout_marginTop="@dimen/twelve_dp"
-        android:layout_marginStart="@dimen/eight_dp"/>
+            android:layout_marginTop="6dp"
+            android:layout_marginStart="8dp"/>
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:layout_marginTop="@dimen/twelve_dp"
-        android:background="@color/black"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/battery_hint"/>
+        <ImageView
+            android:id="@+id/chevron_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_chevron"
+            android:tint="#999999"
+            android:contentDescription="Navigate"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>
