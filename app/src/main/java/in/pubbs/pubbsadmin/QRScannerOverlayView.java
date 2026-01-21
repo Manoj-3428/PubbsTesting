@@ -42,7 +42,7 @@ public class QRScannerOverlayView extends View {
         paint.setStrokeWidth(cornerWidth);
         
         linePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        linePaint.setColor(Color.parseColor("#2196F3")); // Light blue scanning line
+        linePaint.setColor(Color.parseColor("#18B8DB")); // Updated blue color
         linePaint.setStyle(Paint.Style.FILL);
         linePaint.setStrokeWidth(2);
     }
@@ -97,11 +97,11 @@ public class QRScannerOverlayView extends View {
         canvas.drawLine(right - cornerLength, bottom, right, bottom, paint); // Horizontal
         canvas.drawLine(right, bottom - cornerLength, right, bottom, paint); // Vertical
         
-        // Draw scanning line (light blue, moving up and down)
+        // Draw scanning line (using #18B8DB color, moving up and down)
         int maxLinePosition = boxSize;
         if (scanningLinePosition >= 0 && scanningLinePosition <= maxLinePosition) {
             int lineY = top + scanningLinePosition;
-            linePaint.setColor(Color.parseColor("#2196F3")); // Light blue
+            linePaint.setColor(Color.parseColor("#18B8DB")); // Updated blue color
             canvas.drawLine(left, lineY, right, lineY, linePaint);
         }
     }
@@ -115,6 +115,18 @@ public class QRScannerOverlayView extends View {
         this.scanningLinePosition = 0;
         this.scanningDirection = true;
         invalidate();
+    }
+    
+    public int getScanningLinePosition() {
+        return scanningLinePosition;
+    }
+    
+    public boolean getScanningDirection() {
+        return scanningDirection;
+    }
+    
+    public void setScanningDirection(boolean direction) {
+        this.scanningDirection = direction;
     }
     
     public int getScanningAreaSize() {

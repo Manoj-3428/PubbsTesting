@@ -78,6 +78,11 @@ public class ManageUser extends AppCompatActivity implements View.OnClickListene
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(layoutManager);
+        
+        // Initialize adapter immediately to prevent "No adapter attached" error
+        manageUserAdapter = new ManageUserAdapter(filteredList, ManageUser.this);
+        recyclerView.setAdapter(manageUserAdapter);
+        
         customLoader = new CustomLoader(this, R.style.WideDialog);
         customLoader.show();
         noData = findViewById(R.id.no_data_found);
@@ -173,15 +178,11 @@ public class ManageUser extends AppCompatActivity implements View.OnClickListene
         } else {
             noData.setVisibility(View.GONE);
             recyclerView.setVisibility(View.VISIBLE);
-            
-            // Reuse adapter if it exists, otherwise create new one
-            if (manageUserAdapter == null) {
-                manageUserAdapter = new ManageUserAdapter(filteredList, ManageUser.this);
-                recyclerView.setAdapter(manageUserAdapter);
-            } else {
-                // Update existing adapter's data
-                manageUserAdapter.updateList(filteredList);
-            }
+        }
+        
+        // Always update adapter's data (adapter is already attached)
+        if (manageUserAdapter != null) {
+            manageUserAdapter.updateList(filteredList);
         }
     }
 

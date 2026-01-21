@@ -30,9 +30,15 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.Objects;
 
@@ -52,6 +58,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     String mobile, admin_id;
     TextView phone_number, user_name, title;
     Operator operator;
+    private TextView reportBadgeTextView = null;
+    private DatabaseReference reportRootRef = null;
+    private ValueEventListener reportBadgeListener = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -319,6 +328,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         else if (itemId == R.id.am_contact_zone_manager) {
             startActivity(new Intent(MainActivity.this, ContactZoneManagerActivity.class));
         }
+        else if (itemId == R.id.am_bicycle_maintenance || itemId == R.id.zm_bicycle_maintenance) {
+            if (admin_id != null && (admin_id.equalsIgnoreCase("Area Manager") || admin_id.equalsIgnoreCase("Zone Manager"))) {
+                startActivity(new Intent(MainActivity.this, BicycleMaintenanceActivity.class));
+            } else {
+                Toast.makeText(this, "Not authorized", Toast.LENGTH_SHORT).show();
+            }
+        }
         else if (itemId == R.id.am_area_manager_profile) {
             startActivity(new Intent(MainActivity.this, Profile.class));
         }
@@ -381,8 +397,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
-        if (admin_id.equalsIgnoreCase("Area Manager") || admin_id.equalsIgnoreCase("Service Manager")) {
-            //menu item will not inflate
+        if (admin_id.equalsIgnoreCase("Area Manager") || admin_id.equalsIgnoreCase("Zone Manager")) {
+            inflater.inflate(R.menu.area_zone_option_menu, menu);
+            setupReportBadge(menu);
+        } else if (admin_id.equalsIgnoreCase("Service Manager")) {
+            // keep existing behavior: no top-right menu
         } else if (admin_id.equalsIgnoreCase("PUBBS")) {
             inflater.inflate(R.menu.super_admin_option_menu, menu);
             Typeface type = Typeface.createFromAsset(getAssets(), "fonts/Comfortaa-Regular.ttf");
@@ -441,6 +460,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int itemId = item.getItemId();  // Get the ID once to avoid multiple calls
 
+        if (itemId == R.id.action_reports) {
+            if (admin_id != null && (admin_id.equalsIgnoreCase("Area Manager") || admin_id.equalsIgnoreCase("Zone Manager"))) {
+                startActivity(new Intent(MainActivity.this, ReportNotificationsActivity.class));
+                return true;
+            } else {
+                Toast.makeText(this, "Not authorized", Toast.LENGTH_SHORT).show();
+                return true;
+            }
+        }
         if (itemId == R.id.change_area) {
             Intent intent = new Intent(MainActivity.this, ShowMyArea.class);
             startActivity(intent);
@@ -462,6 +490,94 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         else {
             return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void setupReportBadge(Menu menu) {
+        try {
+            MenuItem item = menu.findItem(R.id.action_reports);
+            if (item == null) return;
+            View actionView = item.getActionView();
+            if (actionView == null) return;
+
+            reportBadgeTextView = actionView.findViewById(R.id.badge_text_view);
+            actionView.setOnClickListener(v -> onOptionsItemSelected(item));
+
+            startReportBadgeListener();
+        } catch (Exception e) {
+            Log.e(TAG, "Failed to setup report badge", e);
+        }
+    }
+
+    private void startReportBadgeListener() {
+        stopReportBadgeListener();
+
+        String org = sharedPreferences.getString("organisationName", "");
+        if (org == null) org = "";
+        org = org.replaceAll(" ", "");
+        if (org.isEmpty() || admin_id == null) return;
+
+        reportRootRef = FirebaseDatabase.getInstance().getReference(org);
+        reportBadgeListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int unseen = 0;
+                DataSnapshot reportNode = snapshot.child("ReportCycleCollection");
+                if (!reportNode.exists()) reportNode = snapshot.child("ReportCycle");
+
+                if (reportNode.exists()) {
+                    for (DataSnapshot child : reportNode.getChildren()) {
+                        if (isUnseenForCurrentRole(child)) unseen++;
+                    }
+                }
+                updateBadge(unseen);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Log.e(TAG, "Badge listener cancelled: " + error.getMessage());
+            }
+        };
+        reportRootRef.addValueEventListener(reportBadgeListener);
+    }
+
+    private void stopReportBadgeListener() {
+        if (reportRootRef != null && reportBadgeListener != null) {
+            reportRootRef.removeEventListener(reportBadgeListener);
+        }
+        reportRootRef = null;
+        reportBadgeListener = null;
+    }
+
+    private boolean isUnseenForCurrentRole(@NonNull DataSnapshot reportSnap) {
+        if (admin_id == null) return false;
+
+        if (admin_id.equalsIgnoreCase("Area Manager")) {
+            Boolean seen = reportSnap.child("seenByAreaManager").getValue(Boolean.class);
+            if (seen == null) seen = reportSnap.child("seen_area_manager").getValue(Boolean.class);
+            return seen == null || !seen;
+        }
+        if (admin_id.equalsIgnoreCase("Zone Manager")) {
+            Boolean seen = reportSnap.child("seenByZoneManager").getValue(Boolean.class);
+            if (seen == null) seen = reportSnap.child("seen_zone_manager").getValue(Boolean.class);
+            return seen == null || !seen;
+        }
+        return false;
+    }
+
+    private void updateBadge(int count) {
+        if (reportBadgeTextView == null) return;
+        if (count <= 0) {
+            reportBadgeTextView.setVisibility(View.GONE);
+        } else {
+            reportBadgeTextView.setVisibility(View.VISIBLE);
+            reportBadgeTextView.setText(String.valueOf(count));
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        stopReportBadgeListener();
+        super.onDestroy();
     }
 
 

@@ -22,6 +22,9 @@
             android:id="@+id/zm_live"
             android:title="Live Track" />
         <item
+            android:id="@+id/zm_bicycle_maintenance"
+            android:title="Bicycle Maintenance" />
+        <item
             android:id="@+id/zm_profile"
             android:title="Profile" />
         <item

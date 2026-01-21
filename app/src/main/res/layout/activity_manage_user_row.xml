@@ -25,50 +25,52 @@
             app:layout_constraintTop_toTopOf="@id/icon"
             app:layout_constraintVertical_bias="0.628" />
 
-    <ImageView
-        android:id="@+id/icon"
+        <ImageView
+            android:id="@+id/icon"
             android:layout_width="56dp"
             android:layout_height="56dp"
             android:layout_marginStart="12dp"
             android:contentDescription="@string/user_logo"
-        android:src="@drawable/ic_account_circle_black"
+            android:src="@drawable/ic_account_circle_black"
             app:layout_constraintStart_toEndOf="@+id/status"
             app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/user_name"
+        <TextView
+            android:id="@+id/user_name"
             android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/comfortaa_regular"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/comfortaa_regular"
             android:text="Name"
             android:textAllCaps="true"
-        android:textColor="@color/black"
+            android:textColor="@color/black"
             android:textSize="16sp"
             android:textStyle="bold"
+            android:ellipsize="end"
+            android:maxLines="1"
             app:layout_constraintEnd_toStartOf="@+id/chevron_icon"
-        app:layout_constraintStart_toEndOf="@id/icon"
+            app:layout_constraintStart_toEndOf="@id/icon"
             app:layout_constraintTop_toTopOf="@id/icon"
             android:layout_marginStart="12dp"
             android:layout_marginEnd="8dp" />
 
-    <TextView
-        android:id="@+id/user_id"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/comfortaa_regular"
+        <TextView
+            android:id="@+id/user_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/comfortaa_regular"
             android:text="ID:"
             android:textColor="#666666"
             android:textSize="13sp"
             app:layout_constraintStart_toEndOf="@id/icon"
-        app:layout_constraintTop_toBottomOf="@id/user_name"
+            app:layout_constraintTop_toBottomOf="@id/user_name"
             android:layout_marginStart="12dp"
             android:layout_marginTop="6dp" />
 
-    <TextView
-        android:id="@+id/user_phone"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="@font/comfortaa_regular"
+        <TextView
+            android:id="@+id/user_phone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/comfortaa_regular"
             android:text="Phone:"
             android:textColor="#666666"
             android:textSize="13sp"
@@ -77,6 +79,40 @@
             android:layout_marginTop="6dp"
             android:layout_marginStart="12dp"/>
 
+        <!-- Block Toggle - Directly in container for easy access -->
+        <TextView
+            android:id="@+id/block_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Block"
+            android:textSize="12sp"
+            android:textColor="#666666"
+            android:fontFamily="@font/comfortaa_regular"
+            app:layout_constraintEnd_toStartOf="@+id/block_toggle"
+            app:layout_constraintTop_toBottomOf="@id/user_name"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="8dp"
+            android:layout_marginEnd="4dp" />
+
+        <Switch
+            android:id="@+id/block_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="true"
+            android:thumbTint="@color/white"
+            android:trackTint="@color/grey_400"
+            android:visibility="visible"
+            android:minWidth="56dp"
+            android:minHeight="48dp"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp"
+            app:layout_constraintEnd_toStartOf="@+id/chevron_icon"
+            app:layout_constraintTop_toBottomOf="@id/user_name"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginTop="4dp"
+            android:layout_marginEnd="8dp" />
+
         <ImageView
             android:id="@+id/chevron_icon"
             android:layout_width="24dp"
@@ -84,10 +120,11 @@
             android:src="@drawable/ic_chevron"
             android:tint="#999999"
             android:contentDescription="Navigate"
+            android:layout_marginEnd="8dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </androidx.cardview.widget.CardView>

@@ -24,6 +24,9 @@
         <item
             android:id="@+id/am_contact_zone_manager"
             android:title="Contact Zone Manager" />
+        <item
+            android:id="@+id/am_bicycle_maintenance"
+            android:title="Bicycle Maintenance" />
       <!--  <item
             android:id="@+id/am_show_report"
             android:title="Show Report" />-->
