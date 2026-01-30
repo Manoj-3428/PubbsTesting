@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.MediaPlayer;
@@ -109,7 +110,8 @@ public class CycleTrack extends AppCompatActivity implements OnMapReadyCallback 
                     String latString = String.valueOf(bicycleSnapshot.child("latitude").getValue());
                     String lngString = String.valueOf(bicycleSnapshot.child("longitude").getValue());
                     String theftString = String.valueOf(bicycleSnapshot.child("theft").getValue());
-                    String status = String.valueOf(bicycleSnapshot.child("status").getValue());
+                    String cycleState = String.valueOf(bicycleSnapshot.child("cycleState").getValue());
+                    Long lastMovementAt = bicycleSnapshot.child("lastMovementAt").getValue(Long.class);
 
                     if (latString == null || lngString == null || latString.equals("null") || lngString.equals("null")) {
                         continue;
@@ -123,17 +125,37 @@ public class CycleTrack extends AppCompatActivity implements OnMapReadyCallback 
                     boolean isTheft = theftString != null && theftString.equals("1");
 
                     // -------------------------
-                    // 🔥 Marker Color Logic
+                    // 🔥 Marker Icon Logic (based on cycleState)
                     // -------------------------
                     int iconRes;
 
                     if (isTheft) {
                         iconRes = R.drawable.bicycle_red;      // theft = red
                         theftDetected = true;
-                    } else if ("Active".equalsIgnoreCase(status)) {
-                        iconRes = R.drawable.bicycle_green;    // active = green
                     } else {
-                        iconRes = R.drawable.bicycle_blue;     // others = blue
+                        boolean isRide = "RIDE".equalsIgnoreCase(cycleState);
+                        boolean isStation = "STATION".equalsIgnoreCase(cycleState);
+                        boolean isIdle = "IDLE".equalsIgnoreCase(cycleState);
+
+                        // RIDE stale override -> redicon
+                        boolean rideStale = false;
+                        if (isRide && lastMovementAt != null) {
+                            long now = System.currentTimeMillis();
+                            rideStale = (now - lastMovementAt) >= (15L * 60L * 1000L);
+                        }
+
+                        if (rideStale) {
+                            iconRes = R.drawable.redicon;
+                        } else if (isStation) {
+                            iconRes = R.drawable.bicycle_state_blue;
+                        } else if (isRide) {
+                            iconRes = R.drawable.bicycle_state_green;
+                        } else if (isIdle) {
+                            iconRes = R.drawable.bicycle_state_yellow;
+                        } else {
+                            // Fallback
+                            iconRes = R.drawable.bicycle_state_blue;
+                        }
                     }
 
                     googleMap.addMarker(new MarkerOptions()
@@ -169,12 +191,22 @@ public class CycleTrack extends AppCompatActivity implements OnMapReadyCallback 
 
     private BitmapDescriptor getBitmapIcon(int drawableId) {
         Drawable drawable = ContextCompat.getDrawable(this, drawableId);
+        if (drawable == null) return BitmapDescriptorFactory.defaultMarker();
+
+        Bitmap bitmap;
         if (drawable instanceof BitmapDrawable) {
-            Bitmap original = ((BitmapDrawable) drawable).getBitmap();
-            Bitmap scaled = Bitmap.createScaledBitmap(original, 100, 100, false);
-            return BitmapDescriptorFactory.fromBitmap(scaled);
+            bitmap = ((BitmapDrawable) drawable).getBitmap();
+        } else {
+            int w = drawable.getIntrinsicWidth() > 0 ? drawable.getIntrinsicWidth() : 120;
+            int h = drawable.getIntrinsicHeight() > 0 ? drawable.getIntrinsicHeight() : 120;
+            bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            drawable.draw(canvas);
         }
-        return BitmapDescriptorFactory.defaultMarker();
+
+        Bitmap scaled = Bitmap.createScaledBitmap(bitmap, 100, 100, false);
+        return BitmapDescriptorFactory.fromBitmap(scaled);
     }
 
     private void showBicycleDetails(String bicycleId, LatLng position) {

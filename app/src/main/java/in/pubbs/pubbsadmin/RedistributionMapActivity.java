@@ -1782,7 +1782,7 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
      * Uses optimize=false to preserve station order (as per our logic)
      */
     private String buildDirectionsUrlWithWaypoints(List<StationData> route) {
-        String apiKey = "AIzaSyCv2efqVWc7ju_Tdn01pnLSCiPoLSH00yQ";
+        String apiKey = getResources().getString(R.string.google_maps_key);
         
         if (route.size() < 2) {
             return null;
@@ -1823,8 +1823,7 @@ public class RedistributionMapActivity extends AppCompatActivity implements OnMa
      * Uses the provided API key and ensures only one best route is returned
      */
     private String buildDirectionsUrl(double lat1, double lng1, double lat2, double lng2) {
-        // Use the provided API key directly
-        String apiKey = "AIzaSyCv2efqVWc7ju_Tdn01pnLSCiPoLSH00yQ";
+        String apiKey = getResources().getString(R.string.google_maps_key);
         String origin = lat1 + "," + lng1;
         String destination = lat2 + "," + lng2;
         // Use driving mode (suitable for vans/vehicles)

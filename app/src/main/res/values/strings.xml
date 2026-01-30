@@ -169,7 +169,7 @@
     <string name="reported_cycles">Reported Bicycle</string>
     <string name="scan_qr_code">Scan QR Code</string>
     <string name="all_bicycles">All Bicycles</string>
-    <string name="google_maps_key">AIzaSyCv2efqVWc7ju_Tdn01pnLSCiPoLSH00yQ</string>
+    <string name="google_maps_key">AIzaSyCrcjnwnqEe9iRgzZkqFl_mhR2gd5Fh1II</string>
     <string name="tutorial_1_title">Locate an Area</string>
     <string name="tutorial_1_desc">Add twelve points to create a PUBBS area inside the map.</string>
     <string name="tutorial_2_title">Add new Station</string>

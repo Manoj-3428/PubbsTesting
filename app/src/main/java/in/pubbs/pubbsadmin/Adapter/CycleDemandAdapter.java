@@ -27,9 +27,26 @@ public class CycleDemandAdapter extends RecyclerView.Adapter<CycleDemandAdapter.
     
     // Maximum allowed demand value (configurable, default 15)
     public static final int MAX_DEMAND_VALUE = 15;
+    
+    // Callback to notify when changes are made
+    private OnDemandChangeListener changeListener;
 
     public CycleDemandAdapter(List<StationDemandItem> stationList) {
         this.stationList = stationList;
+    }
+    
+    /**
+     * Set listener to be notified when demand values change
+     */
+    public void setOnDemandChangeListener(OnDemandChangeListener listener) {
+        this.changeListener = listener;
+    }
+    
+    /**
+     * Interface to listen for demand value changes
+     */
+    public interface OnDemandChangeListener {
+        void onDemandChanged();
     }
 
     @NonNull
@@ -98,11 +115,23 @@ public class CycleDemandAdapter extends RecyclerView.Adapter<CycleDemandAdapter.
                         // Store the value as-is (validation happens only on save)
                         // Don't clamp or change the value - let user enter what they want
                         demandMap.put(item.getStationId(), demand);
+                        // Notify listener that changes were made
+                        if (changeListener != null) {
+                            changeListener.onDemandChanged();
+                        }
                     } catch (NumberFormatException e) {
                         demandMap.remove(item.getStationId());
+                        // Notify listener that changes were made
+                        if (changeListener != null) {
+                            changeListener.onDemandChanged();
+                        }
                     }
                 } else {
                     demandMap.remove(item.getStationId());
+                    // Notify listener that changes were made
+                    if (changeListener != null) {
+                        changeListener.onDemandChanged();
+                    }
                 }
             }
         };

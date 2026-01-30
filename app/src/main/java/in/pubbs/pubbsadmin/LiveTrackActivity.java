@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -103,6 +104,11 @@ public class LiveTrackActivity extends AppCompatActivity implements OnMapReadyCa
 
                 googleMap.clear(); // Clear previous overlays
 
+                // Build latest location per device (use newest timestamp if present)
+                final java.util.HashMap<String, LatLng> latestPos = new java.util.HashMap<>();
+                final java.util.HashMap<String, Long> latestTs = new java.util.HashMap<>();
+                final java.util.HashMap<String, String> latestBooking = new java.util.HashMap<>();
+
                 for (DataSnapshot deviceSnapshot : snapshot.getChildren()) {
                     String deviceId = deviceSnapshot.getKey();
                     if (deviceId == null) continue;
@@ -113,37 +119,86 @@ public class LiveTrackActivity extends AppCompatActivity implements OnMapReadyCa
 
                         Double lat = locationSnapshot.child("latitude").getValue(Double.class);
                         Double lng = locationSnapshot.child("longitude").getValue(Double.class);
+                        Long ts = locationSnapshot.child("timestamp").getValue(Long.class);
 
-                        if (lat != null && lng != null) {
-                            LatLng position = new LatLng(lat, lng);
+                        if (lat == null || lng == null) continue;
+                        LatLng position = new LatLng(lat, lng);
 
-                            // Load drawable and create scaled bitmap if possible
-                            Drawable drawable = ContextCompat.getDrawable(LiveTrackActivity.this, R.drawable.bicycle_green);
-                            Bitmap scaled = null;
-                            if (drawable instanceof BitmapDrawable) {
-                                Bitmap original = ((BitmapDrawable) drawable).getBitmap();
-                                scaled = Bitmap.createScaledBitmap(original, 120, 120, false);
-                            }
-
-                            BitmapDescriptor icon;
-                            if (scaled != null) {
-                                icon = BitmapDescriptorFactory.fromBitmap(scaled);
-                            } else {
-                                // fallback to resource marker (ensure R.drawable.live_track exists)
-                                icon = BitmapDescriptorFactory.fromResource(R.drawable.bicycle_green);
-                            }
-
-                            // Add marker (title = deviceId | bookingId)
-                            Marker marker = googleMap.addMarker(new MarkerOptions()
-                                    .position(position)
-                                    .title(deviceId + "|" + bookingId)
-                                    .icon(icon));
-
-                            // Move camera to latest
-                            googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(position, 16f));
+                        Long prev = latestTs.get(deviceId);
+                        if (prev == null || ts == null || ts > prev) {
+                            latestPos.put(deviceId, position);
+                            latestBooking.put(deviceId, bookingId == null ? "" : bookingId);
+                            if (ts != null) latestTs.put(deviceId, ts);
                         }
                     }
                 }
+
+                if (latestPos.isEmpty()) return;
+
+                // Read Bicycle states once, then render markers with correct icons
+                DatabaseReference bicycleRef = FirebaseDatabase.getInstance()
+                        .getReference(organisation)
+                        .child("Bicycle");
+
+                bicycleRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot bikesSnap) {
+                        for (String deviceId : latestPos.keySet()) {
+                            LatLng position = latestPos.get(deviceId);
+                            if (position == null) continue;
+
+                            DataSnapshot bike = bikesSnap.child(deviceId);
+                            String cycleState = String.valueOf(bike.child("cycleState").getValue());
+                            Long lastMovementAt = bike.child("lastMovementAt").getValue(Long.class);
+
+                            boolean isRide = "RIDE".equalsIgnoreCase(cycleState);
+                            boolean isStation = "STATION".equalsIgnoreCase(cycleState);
+                            boolean isIdle = "IDLE".equalsIgnoreCase(cycleState);
+
+                            boolean rideStale = false;
+                            if (isRide) {
+                                long now = System.currentTimeMillis();
+                                Long ts = latestTs.get(deviceId);
+                                if (ts != null) {
+                                    rideStale = (now - ts) >= (15L * 60L * 1000L);
+                                } else if (lastMovementAt != null) {
+                                    rideStale = (now - lastMovementAt) >= (15L * 60L * 1000L);
+                                }
+                            }
+
+                            int iconRes;
+                            if (rideStale) {
+                                iconRes = R.drawable.redicon;
+                            } else if (isStation) {
+                                iconRes = R.drawable.bicycle_state_blue;
+                            } else if (isRide) {
+                                iconRes = R.drawable.bicycle_state_green;
+                            } else if (isIdle) {
+                                iconRes = R.drawable.bicycle_state_yellow;
+                            } else {
+                                iconRes = R.drawable.bicycle_state_blue;
+                            }
+
+                            BitmapDescriptor icon = getBitmapIcon(iconRes, 120);
+                            String bookingId = latestBooking.get(deviceId);
+                            if (bookingId == null) bookingId = "";
+
+                            googleMap.addMarker(new MarkerOptions()
+                                    .position(position)
+                                    .title(deviceId + "|" + bookingId)
+                                    .icon(icon));
+                        }
+
+                        // Move camera to any latest
+                        LatLng any = latestPos.values().iterator().next();
+                        googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(any, 16f));
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.e(TAG, "Failed to load bicycle states", error.toException());
+                    }
+                });
             }
 
             @Override
@@ -233,6 +288,26 @@ public class LiveTrackActivity extends AppCompatActivity implements OnMapReadyCa
                 Log.e(TAG, "Failed to fetch userMobile", error.toException());
             }
         });
+    }
+
+    private BitmapDescriptor getBitmapIcon(int drawableId, int sizePx) {
+        Drawable drawable = ContextCompat.getDrawable(this, drawableId);
+        if (drawable == null) return BitmapDescriptorFactory.defaultMarker();
+
+        Bitmap bitmap;
+        if (drawable instanceof BitmapDrawable) {
+            bitmap = ((BitmapDrawable) drawable).getBitmap();
+        } else {
+            int w = drawable.getIntrinsicWidth() > 0 ? drawable.getIntrinsicWidth() : sizePx;
+            int h = drawable.getIntrinsicHeight() > 0 ? drawable.getIntrinsicHeight() : sizePx;
+            bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            drawable.draw(canvas);
+        }
+
+        Bitmap scaled = Bitmap.createScaledBitmap(bitmap, sizePx, sizePx, false);
+        return BitmapDescriptorFactory.fromBitmap(scaled);
     }
 
 

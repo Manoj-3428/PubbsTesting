@@ -37,6 +37,13 @@ import java.util.Map;
 
 import in.pubbs.pubbsadmin.Adapter.CycleDemandAdapter;
 import in.pubbs.pubbsadmin.Adapter.RedistributionAdapter;
+import in.pubbs.pubbsadmin.Api.ApiClient;
+import in.pubbs.pubbsadmin.Api.CycleDemandApiService;
+import in.pubbs.pubbsadmin.Api.AllStationsDemandResponse;
+import in.pubbs.pubbsadmin.View.CustomLoader;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class Redistribution extends AppCompatActivity {
 
@@ -73,6 +80,12 @@ public class Redistribution extends AppCompatActivity {
     Map<String, Integer> dropMap = new HashMap<>();
 
     int surplusCycles = 0; // extra cycles if supply > demand
+    
+    // Track changes and fetch source
+    private boolean hasUnsavedChanges = false;
+    private boolean isFetchingFromApi = false;
+    private CycleDemandApiService apiService;
+    private CustomLoader loader;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +95,9 @@ public class Redistribution extends AppCompatActivity {
         initView();
         initFirebase();
         setupInitialButtons();
+        
+        // Initialize CustomLoader
+        loader = new CustomLoader(this, R.style.WideDialog);
 
         // Existing redistribution button click handlers
         redistributeBtn.setOnClickListener(v -> redistributeCycles());
@@ -93,22 +109,70 @@ public class Redistribution extends AppCompatActivity {
     
     @Override
     public void onBackPressed() {
-        // If initial buttons are hidden, show them again
+        // If initial buttons are hidden, check for unsaved changes
         if (initialButtonsContainer.getVisibility() != View.VISIBLE) {
-            // Reset to initial state
-            initialButtonsContainer.setVisibility(View.VISIBLE);
-            cycleDemandRecyclerView.setVisibility(View.GONE);
-            submitCycleDemandBtn.setVisibility(View.GONE);
-            redistributeBtn.setVisibility(View.GONE);
-            recyclerView.setVisibility(View.GONE);
-            doneRedistributionBtn.setVisibility(View.GONE);
-            progressBar.setVisibility(View.GONE);
-            noData.setVisibility(View.GONE);
-            toolbarTitle.setText("Redistribution");
+            // Check if we're on cycle demand screen and have unsaved changes
+            if (cycleDemandRecyclerView.getVisibility() == View.VISIBLE && hasUnsavedChanges) {
+                // Show save changes dialog
+                showSaveChangesDialog();
+            } else {
+                // Reset to initial state
+                resetToInitialState();
+            }
         } else {
             // Otherwise, use default back button behavior
             super.onBackPressed();
         }
+    }
+    
+    /**
+     * Show dialog asking user if they want to save changes
+     */
+    private void showSaveChangesDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(Redistribution.this);
+        builder.setTitle("Unsaved Changes");
+        builder.setMessage("You have unsaved changes. Do you want to save them?");
+        
+        builder.setPositiveButton("Save", (dialog, which) -> {
+            // Save changes and then go back
+            Map<String, Integer> demandMap = cycleDemandAdapter.getDemandMap();
+            if (!demandMap.isEmpty()) {
+                saveCycleDemandToFirebase(demandMap);
+            }
+            resetToInitialState();
+            dialog.dismiss();
+        });
+        
+        builder.setNegativeButton("Don't Save", (dialog, which) -> {
+            // Discard changes and go back
+            resetToInitialState();
+            dialog.dismiss();
+        });
+        
+        builder.setNeutralButton("Cancel", (dialog, which) -> {
+            // Stay on current screen
+            dialog.dismiss();
+        });
+        
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+    
+    /**
+     * Reset UI to initial state
+     */
+    private void resetToInitialState() {
+        initialButtonsContainer.setVisibility(View.VISIBLE);
+        cycleDemandRecyclerView.setVisibility(View.GONE);
+        submitCycleDemandBtn.setVisibility(View.GONE);
+        redistributeBtn.setVisibility(View.GONE);
+        recyclerView.setVisibility(View.GONE);
+        doneRedistributionBtn.setVisibility(View.GONE);
+        progressBar.setVisibility(View.GONE);
+        noData.setVisibility(View.GONE);
+        toolbarTitle.setText("Redistribution");
+        hasUnsavedChanges = false;
+        isFetchingFromApi = false;
     }
 
     private void initView() {
@@ -143,19 +207,56 @@ public class Redistribution extends AppCompatActivity {
         
         cycleDemandRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         cycleDemandAdapter = new CycleDemandAdapter(cycleDemandStationList);
+        // Set listener to track changes
+        cycleDemandAdapter.setOnDemandChangeListener(() -> {
+            hasUnsavedChanges = true;
+        });
         cycleDemandRecyclerView.setAdapter(cycleDemandAdapter);
     }
     
     private void setupInitialButtons() {
-        // Cycle Demand button - show station list with input fields
+        // Cycle Demand button - show dialog with 2 options
         cycleDemandBtn.setOnClickListener(v -> {
-            showCycleDemandScreen();
+            showCycleDemandOptionsDialog();
         });
         
         // Redistribute button (initial) - show existing redistribution flow
         redistributeBtnInitial.setOnClickListener(v -> {
             showRedistributionScreen();
         });
+    }
+    
+    /**
+     * Show dialog with options to fetch from database or API
+     */
+    private void showCycleDemandOptionsDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(Redistribution.this);
+        builder.setTitle("Fetch Cycle Demand");
+        
+        // Create options array
+        String[] options = new String[]{
+            "Fetch from Database",
+            "Fetch from API"
+        };
+        
+        builder.setItems(options, (dialog, which) -> {
+            if (which == 0) {
+                // Fetch from Database (existing behavior)
+                isFetchingFromApi = false;
+                showCycleDemandScreen();
+            } else if (which == 1) {
+                // Fetch from API
+                isFetchingFromApi = true;
+                showCycleDemandScreen();
+                // API fetch will be called after stations are loaded (in fetchStationsForCycleDemand)
+            }
+            dialog.dismiss();
+        });
+        
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+        
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
     
     private void showCycleDemandScreen() {
@@ -171,7 +272,11 @@ public class Redistribution extends AppCompatActivity {
         submitCycleDemandBtn.setVisibility(View.GONE);
         noData.setVisibility(View.GONE);
         
-        // Fetch stations from Firebase
+        // Reset unsaved changes flag
+        hasUnsavedChanges = false;
+        
+        // Fetch stations from Firebase (for both database and API flows)
+        // For API flow, we'll update the demand values after API call completes
         fetchStationsForCycleDemand();
     }
     
@@ -255,14 +360,19 @@ public class Redistribution extends AppCompatActivity {
                     }
                     
                     // Get demand value (may not exist)
+                    // If fetching from API, don't load demand from database - set it to null
                     Integer demandValue = null;
-                    DataSnapshot demandSnap = stationSnap.child("stationCycleDemand");
-                    if (demandSnap.exists()) {
-                        Object demandObj = demandSnap.getValue();
-                        if (demandObj instanceof Number) {
-                            demandValue = ((Number) demandObj).intValue();
+                    if (!isFetchingFromApi) {
+                        // Only load demand from database if NOT fetching from API
+                        DataSnapshot demandSnap = stationSnap.child("stationCycleDemand");
+                        if (demandSnap.exists()) {
+                            Object demandObj = demandSnap.getValue();
+                            if (demandObj instanceof Number) {
+                                demandValue = ((Number) demandObj).intValue();
+                            }
                         }
                     }
+                    // If isFetchingFromApi is true, demandValue remains null
                     
                     cycleDemandStationList.add(
                             new CycleDemandAdapter.StationDemandItem(stationId, stationName, demandValue, cycleCount)
@@ -281,6 +391,17 @@ public class Redistribution extends AppCompatActivity {
                     cycleDemandRecyclerView.setVisibility(View.VISIBLE);
                     submitCycleDemandBtn.setVisibility(View.VISIBLE);
                     cycleDemandAdapter.notifyDataSetChanged();
+                    
+                    // If fetching from API, call API now that stations are loaded
+                    if (isFetchingFromApi) {
+                        // Show CustomLoader while fetching from API
+                        if (loader != null && !loader.isShowing()) {
+                            loader.show();
+                        }
+                        fetchCycleDemandFromApi();
+                    } else {
+                        progressBar.setVisibility(View.GONE);
+                    }
                 }
             }
             
@@ -292,6 +413,150 @@ public class Redistribution extends AppCompatActivity {
                 noData.setText("Error loading stations!");
             }
         });
+    }
+    
+    /**
+     * Fetch cycle demand from API for all stations
+     * This will fetch demand for all stations at once and update the UI
+     */
+    private void fetchCycleDemandFromApi() {
+        if (apiService == null) {
+            apiService = ApiClient.getApiService();
+        }
+        
+        if (apiService == null) {
+            Log.e("Redistribution", "API Service not initialized");
+            Toast.makeText(this, "API service not available. Please check API configuration.", Toast.LENGTH_LONG).show();
+            progressBar.setVisibility(View.GONE);
+            return;
+        }
+        
+        // Hide progress bar (CustomLoader is showing)
+        progressBar.setVisibility(View.GONE);
+        noData.setVisibility(View.GONE);
+        
+        // Call API to get all stations' demand at once
+        Call<AllStationsDemandResponse> call = apiService.getAllStationsDemand();
+        
+        call.enqueue(new Callback<AllStationsDemandResponse>() {
+            @Override
+            public void onResponse(Call<AllStationsDemandResponse> call, Response<AllStationsDemandResponse> response) {
+                // Dismiss CustomLoader
+                if (loader != null && loader.isShowing()) {
+                    loader.dismiss();
+                }
+                progressBar.setVisibility(View.GONE);
+                
+                if (response.isSuccessful() && response.body() != null) {
+                    AllStationsDemandResponse apiResponse = response.body();
+                    
+                    if (apiResponse.isSuccess() && apiResponse.getDemands() != null) {
+                        Map<String, Integer> apiDemands = apiResponse.getDemands();
+                        
+                        // Update the station list items with API values
+                        // If API doesn't have a station, keep demand as null (user can enter manually)
+                        for (int i = 0; i < cycleDemandStationList.size(); i++) {
+                            CycleDemandAdapter.StationDemandItem item = cycleDemandStationList.get(i);
+                            String stationId = item.getStationId();
+                            Integer apiDemand = apiDemands.get(stationId); // Will be null if not in API response
+                            
+                            // Create new item with API demand value (or null if not provided)
+                            CycleDemandAdapter.StationDemandItem updatedItem = 
+                                new CycleDemandAdapter.StationDemandItem(
+                                    item.getStationId(),
+                                    item.getStationName(),
+                                    apiDemand, // Can be null if API didn't return this station
+                                    item.getCycleCount()
+                                );
+                            cycleDemandStationList.set(i, updatedItem);
+                        }
+                        
+                        // Notify adapter to refresh the UI with API values
+                        cycleDemandAdapter.notifyDataSetChanged();
+                        
+                        // Immediately update database with API values (only for stations that API returned)
+                        updateDatabaseWithApiDemands(apiDemands);
+                        
+                        // Reset unsaved changes flag since we just fetched from API
+                        hasUnsavedChanges = false;
+                        
+                        // Show UI
+                        if (cycleDemandStationList.isEmpty()) {
+                            noData.setVisibility(View.VISIBLE);
+                            noData.setText("No stations found!");
+                            cycleDemandRecyclerView.setVisibility(View.GONE);
+                            submitCycleDemandBtn.setVisibility(View.GONE);
+                        } else {
+                            noData.setVisibility(View.GONE);
+                            cycleDemandRecyclerView.setVisibility(View.VISIBLE);
+                            submitCycleDemandBtn.setVisibility(View.VISIBLE);
+                        }
+                        
+                        Toast.makeText(Redistribution.this, "Cycle demand fetched from API successfully!", Toast.LENGTH_SHORT).show();
+                    } else {
+                        String errorMsg = apiResponse != null ? apiResponse.getMessage() : "Unknown error";
+                        Log.e("Redistribution", "API returned error: " + errorMsg);
+                        Toast.makeText(Redistribution.this, "API Error: " + errorMsg, Toast.LENGTH_LONG).show();
+                        noData.setVisibility(View.VISIBLE);
+                        noData.setText("Error fetching from API: " + errorMsg);
+                        // Still show the stations even if API failed, so user can enter manually
+                        if (!cycleDemandStationList.isEmpty()) {
+                            cycleDemandRecyclerView.setVisibility(View.VISIBLE);
+                            submitCycleDemandBtn.setVisibility(View.VISIBLE);
+                        }
+                    }
+                } else {
+                    String errorMsg = "Failed to fetch from API. Response code: " + response.code();
+                    Log.e("Redistribution", errorMsg);
+                    Toast.makeText(Redistribution.this, errorMsg, Toast.LENGTH_LONG).show();
+                    noData.setVisibility(View.VISIBLE);
+                    noData.setText("Error fetching from API");
+                }
+            }
+            
+            @Override
+            public void onFailure(Call<AllStationsDemandResponse> call, Throwable t) {
+                // Dismiss CustomLoader
+                if (loader != null && loader.isShowing()) {
+                    loader.dismiss();
+                }
+                progressBar.setVisibility(View.GONE);
+                String errorMsg = "Network error: " + (t.getMessage() != null ? t.getMessage() : "Unknown error");
+                Log.e("Redistribution", "API call failed: " + errorMsg, t);
+                Toast.makeText(Redistribution.this, errorMsg, Toast.LENGTH_LONG).show();
+                noData.setVisibility(View.VISIBLE);
+                noData.setText("Failed to connect to API");
+            }
+        });
+    }
+    
+    /**
+     * Update database immediately with API demand values
+     * This is called right after fetching from API
+     */
+    private void updateDatabaseWithApiDemands(Map<String, Integer> apiDemands) {
+        if (stationRootRef == null || apiDemands == null || apiDemands.isEmpty()) {
+            return;
+        }
+        
+        Log.d("Redistribution", "Updating database with API demands for " + apiDemands.size() + " stations");
+        
+        // Update each station's demand in Firebase
+        for (Map.Entry<String, Integer> entry : apiDemands.entrySet()) {
+            String stationId = entry.getKey();
+            int demand = entry.getValue();
+            
+            DatabaseReference stationRef = stationRootRef.child(stationId);
+            stationRef.child("stationCycleDemand").setValue(demand)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("Redistribution", "Updated station " + stationId + " demand to " + demand);
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("Redistribution", "Failed to update station " + stationId + " demand: " + e.getMessage());
+                });
+        }
+        
+        Log.d("Redistribution", "Database update initiated for all stations");
     }
     
     private void showConfirmationDialog() {
@@ -541,11 +806,8 @@ public class Redistribution extends AppCompatActivity {
         // Reset UI
         cycleDemandStationList.clear();
         cycleDemandAdapter.notifyDataSetChanged();
-        initialButtonsContainer.setVisibility(View.VISIBLE);
-        cycleDemandRecyclerView.setVisibility(View.GONE);
-        submitCycleDemandBtn.setVisibility(View.GONE);
-        noData.setVisibility(View.GONE);
-        toolbarTitle.setText("Redistribution");
+        hasUnsavedChanges = false;
+        resetToInitialState();
     }
 
     private void initFirebase() {
@@ -563,6 +825,9 @@ public class Redistribution extends AppCompatActivity {
         // Log the Firebase path for debugging
         Log.d("Redistribution", "Firebase Station path: " + organisation + "/Station");
         Log.d("Redistribution", "Full Firebase URL: " + stationRootRef.toString());
+        
+        // Initialize API service
+        apiService = ApiClient.getApiService();
     }
 
     private void redistributeCycles() {

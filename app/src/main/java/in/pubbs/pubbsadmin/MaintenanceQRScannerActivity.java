@@ -41,6 +41,8 @@ public class MaintenanceQRScannerActivity extends AppCompatActivity {
 
     private String mode;
     private String stationId;
+    private String stationName;
+    private String areaId;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +51,8 @@ public class MaintenanceQRScannerActivity extends AppCompatActivity {
 
         mode = getIntent().getStringExtra("mode");
         stationId = getIntent().getStringExtra("stationId");
+        stationName = getIntent().getStringExtra("stationName");
+        areaId = getIntent().getStringExtra("areaId");
 
         TextView toolbarTitle = findViewById(R.id.tv_title);
         if (toolbarTitle != null) {
@@ -150,9 +154,10 @@ public class MaintenanceQRScannerActivity extends AppCompatActivity {
 
         Intent data = new Intent();
         data.putExtra("bicycleId", bicycleId);
-        if ("REASSIGN".equalsIgnoreCase(mode) && stationId != null) {
-            data.putExtra("stationId", stationId);
-        }
+        // Echo station context back (useful for add/reassign flows)
+        if (stationId != null) data.putExtra("stationId", stationId);
+        if (stationName != null) data.putExtra("stationName", stationName);
+        if (areaId != null) data.putExtra("areaId", areaId);
         setResult(RESULT_OK, data);
         finish();
     }

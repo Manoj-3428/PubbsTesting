@@ -3,6 +3,7 @@ package in.pubbs.pubbsadmin;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -51,6 +52,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Objects;
 
 import in.pubbs.pubbsadmin.Model.Bicycle;
@@ -165,8 +167,10 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
             }
         }
         else if (v.getId() == R.id.add_bicycle) {
-            if (!(barcodeText.getText().toString().isEmpty()
-                    || barcodeText.getText().toString().trim().equalsIgnoreCase("Enter code manually"))) {
+            // Support both scanned value and manual entry in the EditText
+            String entered = barcodeText.getText() == null ? "" : barcodeText.getText().toString().trim();
+            if (!entered.isEmpty() && !entered.equalsIgnoreCase("Enter code manually")) {
+                code = entered;
                 if (status.equals("ADD")) {
                     Bicycle bicycle = new Bicycle(code, code.replaceAll(":", ""), areaId, stationName, stationId, "active", "100", "0", "0");
                     showDialog("Lock Type", "Please enter the type of lock that is been used");
@@ -318,37 +322,15 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
                         .setValue(bicycle).addOnCompleteListener(new OnCompleteListener<Void>() {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {
-                                Toast.makeText(AddOrRemoveBicycle.this, "Data inserted Successfully", Toast.LENGTH_SHORT).show();
                                 dialog.dismiss();
+                                if (!task.isSuccessful()) {
+                                    Toast.makeText(AddOrRemoveBicycle.this, "Failed to add bicycle", Toast.LENGTH_SHORT).show();
+                                    return;
+                                }
 
-                                // ✅ Increment stationCycleCount
-                                DatabaseReference stationRef = FirebaseDatabase.getInstance().getReference()
-                                        .child(sharedPreferences.getString("organisationName", "").replaceAll(" ", ""))
-                                        .child("Station")
-                                        .child(stationId)
-                                        .child("stationCycleCount");
-
-                                stationRef.runTransaction(new Transaction.Handler() {
-                                    @NonNull
-                                    @Override
-                                    public Transaction.Result doTransaction(@NonNull MutableData currentData) {
-                                        Integer currentValue = currentData.getValue(Integer.class);
-                                        if (currentValue == null) {
-                                            currentData.setValue(1);
-                                        } else {
-                                            currentData.setValue(currentValue + 1);
-                                        }
-                                        return Transaction.success(currentData);
-                                    }
-                                    @Override
-                                    public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
-                                        if (error == null && committed) {
-                                            Log.d("AddBicycle", "stationCycleCount incremented");
-                                        } else {
-                                            Log.e("AddBicycle", "Failed to update stationCycleCount", error != null ? error.toException() : null);
-                                        }
-                                    }
-                                });
+                                // After creating/updating bicycle, ensure it's added into Station/{stationId}/cyclesList
+                                String bicycleId = code.replaceAll(":", "");
+                                ensureInStationCyclesListWithConfirmation(bicycleId);
                             }
                         });
             } else {
@@ -361,5 +343,164 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
             AddOrRemoveBicycle.this.finish();
         });
         dialog.show();
+    }
+
+    /**
+     * Ensures the given bicycle exists under current Station/{stationId}/cyclesList.
+     * If it already exists under another station cyclesList, asks for confirmation to move it.
+     */
+    private void ensureInStationCyclesListWithConfirmation(@NonNull String bicycleId) {
+        String orgName = Objects.requireNonNull(sharedPreferences.getString("organisationName", "no_data")).replaceAll(" ", "");
+        if (stationId == null || stationId.trim().isEmpty()) {
+            Toast.makeText(this, "Please select a station first", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // Fetch battery percentage to store in cyclesList
+        DatabaseReference bikeRef = FirebaseDatabase.getInstance().getReference(orgName + "/Bicycle").child(bicycleId);
+        bikeRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot bikeSnap) {
+                int percentage = getBatteryPercentage(bikeSnap);
+
+                DatabaseReference stationRootRef = FirebaseDatabase.getInstance().getReference(orgName + "/Station");
+                stationRootRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot stationSnap) {
+                        String foundStationKey = null;
+                        String foundStationName = "";
+
+                        for (DataSnapshot stationChild : stationSnap.getChildren()) {
+                            DataSnapshot cyclesListSnap = stationChild.child("cyclesList");
+                            if (cyclesListSnap.exists() && cyclesListSnap.child(bicycleId).exists()) {
+                                foundStationKey = stationChild.getKey();
+                                Object snameObj = stationChild.child("stationName").getValue();
+                                foundStationName = snameObj != null ? snameObj.toString() : "";
+                                break;
+                            }
+                        }
+
+                        if (foundStationKey != null && !foundStationKey.isEmpty()) {
+                            if (foundStationKey.equals(stationId)) {
+                                Toast.makeText(AddOrRemoveBicycle.this, "Bicycle already exists in this station", Toast.LENGTH_SHORT).show();
+                                return;
+                            }
+
+                            String oldIdFinal = foundStationKey;
+                            String oldNameFinal = foundStationName;
+                            new AlertDialog.Builder(AddOrRemoveBicycle.this)
+                                    .setTitle("Cycle already assigned")
+                                    .setMessage("This cycle is already in station \"" + oldNameFinal + "\" (" + oldIdFinal + ").\n\nMove it to \"" + stationName + "\" (" + stationId + ")?")
+                                    .setPositiveButton("Yes, move", (d, which) ->
+                                            upsertCyclesListAndCounts(orgName, bicycleId, percentage, oldIdFinal))
+                                    .setNegativeButton("No", (d, which) -> d.dismiss())
+                                    .setCancelable(true)
+                                    .show();
+                        } else {
+                            upsertCyclesListAndCounts(orgName, bicycleId, percentage, null);
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Toast.makeText(AddOrRemoveBicycle.this, "Failed to check station cycle lists", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(AddOrRemoveBicycle.this, "Failed to load bicycle data", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private int getBatteryPercentage(@NonNull DataSnapshot bikeSnap) {
+        // Prefer cyclebattery if present; otherwise fallback to legacy battery; default 100.
+        int percentage = 100;
+        Object cyclebatteryObj = bikeSnap.child("cyclebattery").getValue();
+        if (cyclebatteryObj != null) {
+            try {
+                double p = Double.parseDouble(cyclebatteryObj.toString());
+                return (int) Math.round(Math.max(0, Math.min(100, p)));
+            } catch (NumberFormatException ignored) { }
+        }
+        Object batteryObj = bikeSnap.child("battery").getValue();
+        if (batteryObj != null) {
+            try {
+                double p = Double.parseDouble(batteryObj.toString());
+                percentage = (int) Math.round(Math.max(0, Math.min(100, p)));
+            } catch (NumberFormatException ignored) { }
+        }
+        return percentage;
+    }
+
+    /**
+     * Multi-location update:
+     * - optionally remove from old station cyclesList
+     * - add into current station cyclesList with {id, percentage}
+     * - set bicycle assignment fields (lowercase) and cyclebattery
+     * - update stationCycleCount (decrement old / increment new)
+     */
+    private void upsertCyclesListAndCounts(@NonNull String orgName,
+                                          @NonNull String bicycleId,
+                                          int percentage,
+                                          @Nullable String oldStationId) {
+        DatabaseReference orgRef = FirebaseDatabase.getInstance().getReference(orgName);
+
+        HashMap<String, Object> updates = new HashMap<>();
+        if (oldStationId != null && !oldStationId.isEmpty()) {
+            updates.put("Station/" + oldStationId + "/cyclesList/" + bicycleId, null);
+        }
+        updates.put("Station/" + stationId + "/cyclesList/" + bicycleId + "/id", bicycleId);
+        updates.put("Station/" + stationId + "/cyclesList/" + bicycleId + "/percentage", percentage);
+
+        // Keep these consistent for other screens that use lowercase keys
+        updates.put("Bicycle/" + bicycleId + "/inStationId", stationId);
+        updates.put("Bicycle/" + bicycleId + "/inStationName", stationName == null ? "" : stationName);
+        updates.put("Bicycle/" + bicycleId + "/inAreaId", areaId == null ? "" : areaId);
+        updates.put("Bicycle/" + bicycleId + "/cyclebattery", percentage);
+
+        orgRef.updateChildren(updates).addOnCompleteListener(t -> {
+            if (!t.isSuccessful()) {
+                Toast.makeText(AddOrRemoveBicycle.this, "Failed to update station cycles list", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Update stationCycleCount (transactions)
+            if (oldStationId != null && !oldStationId.isEmpty()) {
+                updateStationCycleCount(orgRef.child("Station").child(oldStationId).child("stationCycleCount"), -1, () ->
+                        updateStationCycleCount(orgRef.child("Station").child(stationId).child("stationCycleCount"), +1, () -> {
+                            Toast.makeText(AddOrRemoveBicycle.this, "Bicycle moved to station", Toast.LENGTH_SHORT).show();
+                            finish();
+                        })
+                );
+            } else {
+                updateStationCycleCount(orgRef.child("Station").child(stationId).child("stationCycleCount"), +1, () -> {
+                    Toast.makeText(AddOrRemoveBicycle.this, "Bicycle added successfully", Toast.LENGTH_SHORT).show();
+                    finish();
+                });
+            }
+        });
+    }
+
+    private void updateStationCycleCount(@NonNull DatabaseReference countRef, int delta, @NonNull Runnable onDone) {
+        countRef.runTransaction(new Transaction.Handler() {
+            @NonNull
+            @Override
+            public Transaction.Result doTransaction(@NonNull MutableData currentData) {
+                Integer current = currentData.getValue(Integer.class);
+                if (current == null) current = 0;
+                int next = current + delta;
+                if (next < 0) next = 0;
+                currentData.setValue(next);
+                return Transaction.success(currentData);
+            }
+
+            @Override
+            public void onComplete(@Nullable DatabaseError error, boolean committed, @Nullable DataSnapshot currentData) {
+                onDone.run();
+            }
+        });
     }
 }

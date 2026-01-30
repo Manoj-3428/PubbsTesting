@@ -121,10 +121,11 @@ public void onBindViewHolder(@NonNull BicycleListAdapter.MyViewHolder holder, in
         }
 
         holder.constraintLayout.setOnClickListener(v -> {
+            // Use existing AddOrRemoveBicycle screen (scanner + manual entry UI)
             Intent intent = new Intent(context, AddOrRemoveBicycle.class);
-            intent.putExtra("StationId", item.get("stationId") != null ? item.get("stationId").toString() : "N/A");
-            intent.putExtra("StationName", item.get("stationName") != null ? item.get("stationName").toString() : "N/A");
-            intent.putExtra("AreaId", holder.sharedPreferences.getString("areaId", "N/A"));
+            intent.putExtra("StationId", item.get("stationId") != null ? item.get("stationId").toString() : "");
+            intent.putExtra("StationName", item.get("stationName") != null ? item.get("stationName").toString() : "");
+            intent.putExtra("AreaId", holder.sharedPreferences.getString("areaId", ""));
             intent.putExtra("Status", "ADD");
             context.startActivity(intent);
         });

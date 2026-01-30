@@ -320,7 +320,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(MainActivity.this, Redistribution.class));
         }
         else if (itemId == R.id.am_manage_cycle) {
-            startActivity(new Intent(MainActivity.this, BicycleListActivity.class));
+            // Manage Bicycle (tabs) screen
+            startActivity(new Intent(MainActivity.this, ManageBicycle.class));
         }
         else if (itemId == R.id.am_manage_ads) {
             startActivity(new Intent(MainActivity.this, ManageAds.class));
@@ -342,7 +343,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startActivity(new Intent(MainActivity.this, LiveTrackActivity.class));
         }
         else if (itemId == R.id.sm_manage_cycle) {
-            startActivity(new Intent(MainActivity.this, BicycleListActivity.class));
+            // Manage Bicycle (tabs) screen
+            startActivity(new Intent(MainActivity.this, ManageBicycle.class));
         }
         else if (itemId == R.id.sm_redistribution) {
             startActivity(new Intent(MainActivity.this, Redistribution.class));
@@ -627,4 +629,5 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             paint.setTypeface(typeface);
         }
     }
+
 }

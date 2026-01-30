@@ -342,35 +342,104 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
         Log.d(TAG, "path: " + path);
         list.clear();
         type = "";
+        String orgName = sharedPreferences.getString("organisationName", "no_data").replace(" ", "");
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(path);
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 long startTime = System.currentTimeMillis();
                 int count = 0;
+                int totalBicycles = (int) dataSnapshot.getChildrenCount();
+                final int[] loadedCount = {0};
+                
+                if (totalBicycles == 0) {
+                    customLoader.dismiss();
+                    noDataFound.setVisibility(View.VISIBLE);
+                    rv_bicycle_list.setVisibility(View.GONE);
+                    return;
+                }
                 
                 for (DataSnapshot i : dataSnapshot.getChildren()) {
                     try {
                         Map<String, Object> map = (Map<String, Object>) i.getValue();
                         if (map != null) {
-                            list.add(map);
-                            count++;
+                            String cycleId = i.getKey();
+                            
+                            // Fetch battery from Bicycle/{cycleId}/cyclebattery
+                            DatabaseReference batteryRef = FirebaseDatabase.getInstance()
+                                    .getReference(orgName + "/Bicycle/" + cycleId + "/cyclebattery");
+                            
+                            batteryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot batterySnapshot) {
+                                    if (batterySnapshot.exists() && batterySnapshot.getValue() != null) {
+                                        Object batteryValue = batterySnapshot.getValue();
+                                        // Convert to string and format
+                                        String batteryStr = batteryValue.toString();
+                                        try {
+                                            double batteryDouble = Double.parseDouble(batteryStr);
+                                            // Round to integer for display
+                                            int batteryInt = (int) Math.round(batteryDouble);
+                                            map.put("battery", String.valueOf(batteryInt));
+                                        } catch (NumberFormatException e) {
+                                            map.put("battery", batteryStr);
+                                        }
+                                    } else {
+                                        // If battery not found, default to 100% (new cycle)
+                                        map.put("battery", "100");
+                                    }
+                                    
+                                    synchronized (list) {
+                                        list.add(map);
+                                        loadedCount[0]++;
+                                        
+                                        // When all bicycles are loaded, update the UI
+                                        if (loadedCount[0] == totalBicycles) {
+                                            long endTime = System.currentTimeMillis();
+                                            Log.d(TAG, "Loaded " + loadedCount[0] + " bicycles in " + (endTime - startTime) + "ms");
+                                            
+                                            // Update filtered list with all data
+                                            filteredList.clear();
+                                            filteredList.addAll(list);
+                                            
+                                            // Update recyclerview
+                                            updateRecyclerView();
+                                            customLoader.dismiss();
+                                        }
+                                    }
+                                }
+                                
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+                                    Log.e(TAG, "Error loading battery for cycle " + cycleId + ": " + databaseError.getMessage());
+                                    // Default to 100% if battery fetch fails
+                                    map.put("battery", "100");
+                                    
+                                    synchronized (list) {
+                                        list.add(map);
+                                        loadedCount[0]++;
+                                        
+                                        if (loadedCount[0] == totalBicycles) {
+                                            filteredList.clear();
+                                            filteredList.addAll(list);
+                                            updateRecyclerView();
+                                            customLoader.dismiss();
+                                        }
+                                    }
+                                }
+                            });
                         }
                     } catch (Exception exc) {
                         Log.e(TAG, "Error parsing bicycle data: " + exc.getMessage());
+                        loadedCount[0]++;
+                        if (loadedCount[0] == totalBicycles) {
+                            filteredList.clear();
+                            filteredList.addAll(list);
+                            updateRecyclerView();
+                            customLoader.dismiss();
+                        }
                     }
                 }
-                
-                long endTime = System.currentTimeMillis();
-                Log.d(TAG, "Loaded " + count + " bicycles in " + (endTime - startTime) + "ms");
-                
-                // Update filtered list with all data
-                filteredList.clear();
-                filteredList.addAll(list);
-                
-                // Update recyclerview
-                updateRecyclerView();
-                customLoader.dismiss();
             }
 
             @Override
@@ -388,43 +457,113 @@ public class BicycleListActivity extends AppCompatActivity implements View.OnCli
         type = "";
         String path = sharedPreferences.getString("organisationName", "no_data").replace(" ", "") + "/Bicycle";
         Log.d(TAG, "path: " + path);
+        String orgName = sharedPreferences.getString("organisationName", "no_data").replace(" ", "");
         DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference(path);
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 long startTime = System.currentTimeMillis();
-                int count = 0;
+                int totalBicycles = (int) dataSnapshot.getChildrenCount();
+                final int[] loadedCount = {0};
+                final int[] lowBatteryCount = {0};
+                
+                if (totalBicycles == 0) {
+                    customLoader.dismiss();
+                    noDataFound.setVisibility(View.VISIBLE);
+                    rv_bicycle_list.setVisibility(View.GONE);
+                    return;
+                }
                 
                 for (DataSnapshot i : dataSnapshot.getChildren()) {
-                    if (i.child("battery").exists()) {
-                        try {
-                            String batteryStr = i.child("battery").getValue() != null ? 
-                                i.child("battery").getValue().toString() : "0";
-                            int battery = Integer.parseInt(batteryStr.replaceAll("[^0-9]", ""));
+                    try {
+                        Map<String, Object> map = (Map<String, Object>) i.getValue();
+                        if (map != null) {
+                            String cycleId = i.getKey();
                             
-                            if (battery < 40) {
-                                Map<String, Object> map = (Map<String, Object>) i.getValue();
-                                if (map != null) {
-                                    list.add(map);
-                                    count++;
+                            // Fetch battery from Bicycle/{cycleId}/cyclebattery
+                            DatabaseReference batteryRef = FirebaseDatabase.getInstance()
+                                    .getReference(orgName + "/Bicycle/" + cycleId + "/cyclebattery");
+                            
+                            batteryRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(@NonNull DataSnapshot batterySnapshot) {
+                                    int battery = 100; // Default to 100%
+                                    
+                                    if (batterySnapshot.exists() && batterySnapshot.getValue() != null) {
+                                        try {
+                                            Object batteryValue = batterySnapshot.getValue();
+                                            double batteryDouble = Double.parseDouble(batteryValue.toString());
+                                            battery = (int) Math.round(batteryDouble);
+                                        } catch (NumberFormatException e) {
+                                            Log.e(TAG, "Error parsing battery: " + e.getMessage());
+                                        }
+                                    }
+                                    
+                                    // Only add if battery is less than 40%
+                                    if (battery < 40) {
+                                        map.put("battery", String.valueOf(battery));
+                                        
+                                        synchronized (list) {
+                                            list.add(map);
+                                            lowBatteryCount[0]++;
+                                        }
+                                    }
+                                    
+                                    synchronized (list) {
+                                        loadedCount[0]++;
+                                        
+                                        // When all bicycles are checked, update the UI
+                                        if (loadedCount[0] == totalBicycles) {
+                                            long endTime = System.currentTimeMillis();
+                                            Log.d(TAG, "Loaded " + lowBatteryCount[0] + " low battery bicycles in " + (endTime - startTime) + "ms");
+                                            
+                                            // Update filtered list with all data
+                                            filteredList.clear();
+                                            filteredList.addAll(list);
+                                            
+                                            // Update recyclerview
+                                            updateRecyclerView();
+                                            customLoader.dismiss();
+                                        }
+                                    }
                                 }
+                                
+                                @Override
+                                public void onCancelled(@NonNull DatabaseError databaseError) {
+                                    Log.e(TAG, "Error loading battery for cycle " + cycleId + ": " + databaseError.getMessage());
+                                    
+                                    synchronized (list) {
+                                        loadedCount[0]++;
+                                        
+                                        if (loadedCount[0] == totalBicycles) {
+                                            filteredList.clear();
+                                            filteredList.addAll(list);
+                                            updateRecyclerView();
+                                            customLoader.dismiss();
+                                        }
+                                    }
+                                }
+                            });
+                        } else {
+                            loadedCount[0]++;
+                            if (loadedCount[0] == totalBicycles) {
+                                filteredList.clear();
+                                filteredList.addAll(list);
+                                updateRecyclerView();
+                                customLoader.dismiss();
                             }
-                        } catch (Exception e) {
-                            Log.e(TAG, "Error parsing battery: " + e.getMessage());
+                        }
+                    } catch (Exception e) {
+                        Log.e(TAG, "Error parsing bicycle data: " + e.getMessage());
+                        loadedCount[0]++;
+                        if (loadedCount[0] == totalBicycles) {
+                            filteredList.clear();
+                            filteredList.addAll(list);
+                            updateRecyclerView();
+                            customLoader.dismiss();
                         }
                     }
                 }
-                
-                long endTime = System.currentTimeMillis();
-                Log.d(TAG, "Loaded " + count + " low battery bicycles in " + (endTime - startTime) + "ms");
-                
-                // Update filtered list with all data
-                filteredList.clear();
-                filteredList.addAll(list);
-                
-                // Update recyclerview
-                updateRecyclerView();
-                customLoader.dismiss();
             }
 
             @Override
