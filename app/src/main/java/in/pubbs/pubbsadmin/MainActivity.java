@@ -602,7 +602,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         public void updateDrawState(@NonNull TextPaint textPaint) {
             applyCustomTypeFace(textPaint, typeface);
         }
-
         @Override
         public void updateMeasureState(@NonNull TextPaint textPaint) {
             applyCustomTypeFace(textPaint, typeface);

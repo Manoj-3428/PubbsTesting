@@ -60,14 +60,81 @@
 
     </FrameLayout>
 
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/search_container"
+        android:layout_width="0dp"
+        android:layout_height="48dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="8dp"
+        android:background="@drawable/bg_search_box"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/segment_root"
+        tools:visibility="visible">
+
+        <ImageView
+            android:id="@+id/search_icon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:paddingStart="12dp"
+            android:src="@drawable/ic_search"
+            app:drawableTint="#757575"
+            app:tint="#757575"
+            android:contentDescription="@string/search"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <EditText
+            android:id="@+id/search_box"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/transparent"
+            android:drawablePadding="12dp"
+            android:fontFamily="@font/comfortaa_regular"
+            android:hint="@string/search"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:textColor="@color/black"
+            android:textColorHint="#757575"
+            android:textSize="15sp"
+            app:layout_constraintEnd_toStartOf="@+id/search_clear"
+            app:layout_constraintStart_toEndOf="@id/search_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <ImageView
+            android:id="@+id/search_clear"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:padding="4dp"
+            android:paddingEnd="12dp"
+            android:src="@drawable/ic_close"
+            app:tint="#757575"
+            android:contentDescription="Clear"
+            android:visibility="gone"
+            android:clickable="true"
+            android:focusable="true"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
     <ScrollView
+        android:id="@+id/scroll_content"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:fillViewport="true"
         android:orientation="vertical"
         android:scrollbars="none"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/segment_root">
+        app:layout_constraintBottom_toTopOf="@+id/add_bicycle_button"
+        app:layout_constraintTop_toBottomOf="@id/search_container">
 
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipe_refresh"
@@ -81,13 +148,31 @@
         </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
     </ScrollView>
 
+    <TextView
+        android:id="@+id/add_bicycle_button"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@color/black"
+        android:fontFamily="@font/comfortaa_regular"
+        android:gravity="center"
+        android:text="@string/add_bicycle"
+        android:textColor="@color/white"
+        android:textSize="16sp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        tools:visibility="visible" />
+
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/no_data_found"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/zero_dp"
+        android:layout_height="0dp"
         android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/segment_root">
+        app:layout_constraintBottom_toTopOf="@id/add_bicycle_button"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/search_container">
 
         <ImageView
             android:id="@+id/img"

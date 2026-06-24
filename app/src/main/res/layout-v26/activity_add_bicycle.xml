@@ -35,10 +35,12 @@
             android:layout_marginHorizontal="@dimen/twenty_four_dp"
             android:backgroundTint="@color/white"
             android:fontFamily="@font/comfortaa_regular"
+            android:hint="@string/enter_code_manually"
+            android:inputType="text"
             android:paddingBottom="@dimen/twenty_four_dp"
-            android:text="Enter code manually"
             android:textAlignment="center"
             android:textColor="@color/white"
+            android:textColorHint="#99FFFFFF"
             app:layout_constraintTop_toBottomOf="@id/instruction" />
 
         <SurfaceView

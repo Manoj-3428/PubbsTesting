@@ -81,6 +81,8 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1234;
     private static final int MY_CAMERA_REQUEST_CODE = 100;
     double latitude, longitude;
+    /** Prevents the scan detector from re-triggering the flow (and dialog) repeatedly while the same barcode is in view. */
+    private boolean scanFlowInProgress = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -99,6 +101,7 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
         areaId = getIntent().getStringExtra("AreaId") == null ? "" : getIntent().getStringExtra("AreaId");
         surfaceView = findViewById(R.id.surface_view);
         barcodeText = findViewById(R.id.tv_barcode);
+        if (barcodeText != null) barcodeText.setText("");
         title = findViewById(R.id.toolbar_title);
         title.setText(status.equals("ADD") ? "Add Bicycle" : "Repair Bicycle");
         back = findViewById(R.id.back_button);
@@ -128,10 +131,17 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
 
             @Override
             public void receiveDetections(Detector.Detections<Barcode> detections) {
+                if (scanFlowInProgress) return;
                 sparseArray = detections.getDetectedItems();
                 if (sparseArray.size() > 0) {
-                    Log.d(TAG, "data: " + sparseArray.valueAt(0).displayValue);
-                    setCode(sparseArray.valueAt(0).displayValue);
+                    final String scannedValue = sparseArray.valueAt(0).displayValue;
+                    Log.d(TAG, "data: " + scannedValue);
+                    runOnUiThread(() -> {
+                        if (scanFlowInProgress) return;
+                        scanFlowInProgress = true;
+                        setCode(scannedValue);
+                        performAddBicycleFlow();
+                    });
                 }
             }
         });
@@ -167,27 +177,32 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
             }
         }
         else if (v.getId() == R.id.add_bicycle) {
-            // Support both scanned value and manual entry in the EditText
-            String entered = barcodeText.getText() == null ? "" : barcodeText.getText().toString().trim();
-            if (!entered.isEmpty() && !entered.equalsIgnoreCase("Enter code manually")) {
-                code = entered;
-                if (status.equals("ADD")) {
-                    Bicycle bicycle = new Bicycle(code, code.replaceAll(":", ""), areaId, stationName, stationId, "active", "100", "0", "0");
-                    showDialog("Lock Type", "Please enter the type of lock that is been used");
-                }
-                else {
-                    checkBicycle(code.replaceAll(":", ""));
-                }
-            }
-            else {
-                barcodeText.setError("Scan was not properly done");
-            }
+            performAddBicycleFlow();
         }
     }
 
     private void setCode(String code) {
         this.code = code;
         barcodeText.setText(code);
+    }
+
+    /**
+     * Runs the add/repair flow using the current value in the barcode input (from scan or manual entry).
+     * Called when user taps Add Bicycle or automatically after a successful scan.
+     */
+    private void performAddBicycleFlow() {
+        String entered = barcodeText.getText() == null ? "" : barcodeText.getText().toString().trim();
+        if (entered.isEmpty()) {
+            barcodeText.setError("Scan was not properly done");
+            return;
+        }
+        code = entered;
+        if (status.equals("ADD")) {
+            Bicycle bicycle = new Bicycle(code, code.replaceAll(":", "").trim(), areaId, stationName, stationId, "active", "100", "0", "0");
+            showDialog("Lock Type", "Please enter the type of lock that is been used");
+        } else {
+            checkBicycle(code.replaceAll(":", "").trim());
+        }
     }
 
     private static Camera getCamera(@NonNull CameraSource cameraSource) {
@@ -275,8 +290,10 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
         dbCheckBicycle = FirebaseDatabase.getInstance().getReference(Objects.requireNonNull(sharedPreferences.getString("organisationName", "no_data")).replaceAll(" ", "") + "/Bicycle");
         dbCheckBicycle.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                boolean found = false;
                 for (DataSnapshot i : dataSnapshot.getChildren()) {
                     if (Objects.requireNonNull(i.getKey()).equals(code)) {
+                        found = true;
                         adminId = sharedPreferences.getString("admin_id", "null");
                         mobile = sharedPreferences.getString("mobileValue", "null");
                         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm:ss");
@@ -287,12 +304,17 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
                                 .child("RepairBicycle").child(code.replaceAll(":", "")).setValue(repairBicycle);
                         dbRemoveBicycle.child(code.replaceAll(":", "")).removeValue();
                         finish();
-                    } else {
-                        Toast.makeText(getApplicationContext(), "Please check the Bicycle lock properly", Toast.LENGTH_SHORT).show();
+                        break;
                     }
                 }
+                if (!found) {
+                    Toast.makeText(getApplicationContext(), "Please check the Bicycle lock properly", Toast.LENGTH_SHORT).show();
+                    scanFlowInProgress = false;
+                }
             }
-            @Override public void onCancelled(@NonNull DatabaseError databaseError) { }
+            @Override public void onCancelled(@NonNull DatabaseError databaseError) {
+                scanFlowInProgress = false;
+            }
         });
     }
 
@@ -329,7 +351,7 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
                                 }
 
                                 // After creating/updating bicycle, ensure it's added into Station/{stationId}/cyclesList
-                                String bicycleId = code.replaceAll(":", "");
+                                String bicycleId = code.replaceAll(":", "").trim();
                                 ensureInStationCyclesListWithConfirmation(bicycleId);
                             }
                         });
@@ -342,6 +364,7 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
             dialog.dismiss();
             AddOrRemoveBicycle.this.finish();
         });
+        dialog.setOnDismissListener(d -> scanFlowInProgress = false);
         dialog.show();
     }
 
@@ -350,6 +373,8 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
      * If it already exists under another station cyclesList, asks for confirmation to move it.
      */
     private void ensureInStationCyclesListWithConfirmation(@NonNull String bicycleId) {
+        final String trimmedBicycleId = bicycleId != null ? bicycleId.trim() : "";
+        if (trimmedBicycleId.isEmpty()) return;
         String orgName = Objects.requireNonNull(sharedPreferences.getString("organisationName", "no_data")).replaceAll(" ", "");
         if (stationId == null || stationId.trim().isEmpty()) {
             Toast.makeText(this, "Please select a station first", Toast.LENGTH_SHORT).show();
@@ -357,7 +382,7 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
         }
 
         // Fetch battery percentage to store in cyclesList
-        DatabaseReference bikeRef = FirebaseDatabase.getInstance().getReference(orgName + "/Bicycle").child(bicycleId);
+        DatabaseReference bikeRef = FirebaseDatabase.getInstance().getReference(orgName + "/Bicycle").child(trimmedBicycleId);
         bikeRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot bikeSnap) {
@@ -372,7 +397,7 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
 
                         for (DataSnapshot stationChild : stationSnap.getChildren()) {
                             DataSnapshot cyclesListSnap = stationChild.child("cyclesList");
-                            if (cyclesListSnap.exists() && cyclesListSnap.child(bicycleId).exists()) {
+                            if (cyclesListSnap.exists() && cyclesListSnap.child(trimmedBicycleId).exists()) {
                                 foundStationKey = stationChild.getKey();
                                 Object snameObj = stationChild.child("stationName").getValue();
                                 foundStationName = snameObj != null ? snameObj.toString() : "";
@@ -392,12 +417,12 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
                                     .setTitle("Cycle already assigned")
                                     .setMessage("This cycle is already in station \"" + oldNameFinal + "\" (" + oldIdFinal + ").\n\nMove it to \"" + stationName + "\" (" + stationId + ")?")
                                     .setPositiveButton("Yes, move", (d, which) ->
-                                            upsertCyclesListAndCounts(orgName, bicycleId, percentage, oldIdFinal))
+                                            upsertCyclesListAndCounts(orgName, trimmedBicycleId, percentage, oldIdFinal))
                                     .setNegativeButton("No", (d, which) -> d.dismiss())
                                     .setCancelable(true)
                                     .show();
                         } else {
-                            upsertCyclesListAndCounts(orgName, bicycleId, percentage, null);
+                            upsertCyclesListAndCounts(orgName, trimmedBicycleId, percentage, null);
                         }
                     }
 
@@ -454,12 +479,15 @@ public class AddOrRemoveBicycle extends AppCompatActivity implements View.OnClic
         }
         updates.put("Station/" + stationId + "/cyclesList/" + bicycleId + "/id", bicycleId);
         updates.put("Station/" + stationId + "/cyclesList/" + bicycleId + "/percentage", percentage);
+        updates.put("Station/" + stationId + "/cyclesList/" + bicycleId + "/cycleState", "STATION");
 
-        // Keep these consistent for other screens that use lowercase keys
+        // Keep these consistent for other screens that use lowercase keys; set cycleState when at station
         updates.put("Bicycle/" + bicycleId + "/inStationId", stationId);
         updates.put("Bicycle/" + bicycleId + "/inStationName", stationName == null ? "" : stationName);
         updates.put("Bicycle/" + bicycleId + "/inAreaId", areaId == null ? "" : areaId);
         updates.put("Bicycle/" + bicycleId + "/cyclebattery", percentage);
+        updates.put("Bicycle/" + bicycleId + "/cycleState", "STATION");
+        updates.put("Bicycle/" + bicycleId + "/cycleStatus", "STATION");
 
         orgRef.updateChildren(updates).addOnCompleteListener(t -> {
             if (!t.isSuccessful()) {

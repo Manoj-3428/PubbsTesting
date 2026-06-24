@@ -64,13 +64,18 @@ public class SelectStationActivity extends AppCompatActivity {
                 List<StationRow> rows = new ArrayList<>();
                 for (DataSnapshot child : snapshot.getChildren()) {
                     String stationId = child.getKey();
-                    String stationName = String.valueOf(child.child("stationName").getValue());
-                    if (stationId != null) rows.add(new StationRow(stationId, stationName));
+                    Object snameObj = child.child("stationName").getValue();
+                    String stationName = snameObj == null ? stationId : String.valueOf(snameObj);
+                    Object areaObj = child.child("areaId").getValue();
+                    String areaId = areaObj == null ? "" : String.valueOf(areaObj);
+                    if (stationId != null) rows.add(new StationRow(stationId, stationName, areaId));
                 }
 
                 SelectStationAdapter adapter = new SelectStationAdapter(rows, stationRow -> {
                     Intent data = new Intent();
                     data.putExtra("stationId", stationRow.stationId);
+                    data.putExtra("stationName", stationRow.stationName);
+                    data.putExtra("areaId", stationRow.areaId != null ? stationRow.areaId : "");
                     setResult(RESULT_OK, data);
                     finish();
                 });
@@ -91,9 +96,11 @@ public class SelectStationActivity extends AppCompatActivity {
     static class StationRow {
         final String stationId;
         final String stationName;
-        StationRow(String stationId, String stationName) {
+        final String areaId;
+        StationRow(String stationId, String stationName, String areaId) {
             this.stationId = stationId;
             this.stationName = stationName;
+            this.areaId = areaId;
         }
     }
 }

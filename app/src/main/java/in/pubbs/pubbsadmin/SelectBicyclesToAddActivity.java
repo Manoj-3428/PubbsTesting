@@ -258,6 +258,8 @@ public class SelectBicyclesToAddActivity extends AppCompatActivity {
             bikeUpdates.put("inStationName", stationName);
             bikeUpdates.put("inAreaId", areaId != null ? areaId : "");
             bikeUpdates.put("cyclebattery", item.percentage);
+            bikeUpdates.put("cycleState", "STATION");
+            bikeUpdates.put("cycleStatus", "STATION");
 
             bicycleRootRef.child(item.bicycleId).updateChildren(bikeUpdates).addOnCompleteListener(task -> {
                 if (!task.isSuccessful()) {
@@ -305,14 +307,16 @@ public class SelectBicyclesToAddActivity extends AppCompatActivity {
         });
     }
 
-    /** For Firebase: { id, percentage } under cyclesList/{bicycleId} */
+    /** For Firebase: { id, percentage, cycleState } under cyclesList/{bicycleId} */
     @SuppressWarnings("unused")
     public static class CycleEntry {
         public String id;
         public int percentage;
+        public String cycleState;
         public CycleEntry(String id, int percentage) {
             this.id = id;
             this.percentage = percentage;
+            this.cycleState = "STATION";
         }
     }
 }

@@ -12,12 +12,17 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.animation.DecelerateInterpolator;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -68,6 +73,14 @@ public class ManageBicycle extends AppCompatActivity {
     private Screen currentScreen = Screen.STATION_LIST;
     private final HashMap<String, String> stationIdToAreaId = new HashMap<>();
     private final HashMap<String, String> stationIdToName = new HashMap<>();
+    private View searchContainer;
+    private EditText searchBox;
+    private ImageView searchClear;
+    private TextView addBicycleButton;
+    private final List<SelectStationActivity.StationRow> fullStationRows = new ArrayList<>();
+    private final List<ManageCycleListAdapter.Item> fullBicycleItems = new ArrayList<>();
+    private final List<ManageCycleListAdapter.Item> fullStationCycleItems = new ArrayList<>();
+    private static final int REQUEST_SELECT_STATION_FOR_ADD = 200;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,7 +102,15 @@ public class ManageBicycle extends AppCompatActivity {
         back = findViewById(R.id.back_button);
         toolbar = findViewById(R.id.toolbar);
         noData = findViewById(R.id.no_data_found);
+        searchContainer = findViewById(R.id.search_container);
+        searchBox = findViewById(R.id.search_box);
+        searchClear = findViewById(R.id.search_clear);
+        addBicycleButton = findViewById(R.id.add_bicycle_button);
         toolbar.setTitle("");
+        setupSearchBox();
+        if (addBicycleButton != null) {
+            addBicycleButton.setOnClickListener(v -> onAddBicycleClicked());
+        }
         back.setOnClickListener(v -> {
             /*startActivity(new Intent(ManageBicycle.this, MainActivity.class));
             finish();*/
@@ -122,6 +143,113 @@ public class ManageBicycle extends AppCompatActivity {
             }
             swipeRefresh.setRefreshing(false);
         });
+    }
+
+    private void setupSearchBox() {
+        if (searchBox == null) return;
+        searchBox.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (searchClear != null) {
+                    searchClear.setVisibility(s != null && s.length() > 0 ? View.VISIBLE : View.GONE);
+                }
+                applySearchFilter();
+            }
+        });
+        searchBox.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
+                searchBox.clearFocus();
+                hideKeyboard(searchBox);
+                return true;
+            }
+            return false;
+        });
+        if (searchClear != null) {
+            searchClear.setOnClickListener(v -> {
+                if (searchBox != null) {
+                    searchBox.setText("");
+                    searchBox.clearFocus();
+                    hideKeyboard(searchBox);
+                }
+                if (searchClear != null) searchClear.setVisibility(View.GONE);
+            });
+        }
+    }
+
+    private void hideKeyboard(View view) {
+        if (view == null) return;
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (imm != null) imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    private void applySearchFilter() {
+        String query = searchBox != null ? searchBox.getText().toString().trim().toLowerCase() : "";
+        if (currentScreen == Screen.STATION_LIST) {
+            List<SelectStationActivity.StationRow> filtered = new ArrayList<>();
+            for (SelectStationActivity.StationRow row : fullStationRows) {
+                String name = row.stationName != null ? row.stationName : row.stationId;
+                if (query.isEmpty() || (name != null && name.toLowerCase().contains(query))) {
+                    filtered.add(row);
+                }
+            }
+            SelectStationAdapter adapter = new SelectStationAdapter(filtered, stationRow -> {
+                stationID = stationRow.stationId;
+                stationName = stationRow.stationName == null ? stationRow.stationId : stationRow.stationName;
+                areaID = stationRow.areaId;
+                showStationCycles(stationID);
+            });
+            recyclerView.setAdapter(adapter);
+            recyclerView.setVisibility(filtered.isEmpty() ? View.GONE : View.VISIBLE);
+            noData.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
+        } else if (currentScreen == Screen.ALL_BICYCLES) {
+            List<ManageCycleListAdapter.Item> filtered = new ArrayList<>();
+            for (ManageCycleListAdapter.Item item : fullBicycleItems) {
+                if (query.isEmpty() || (item.id != null && item.id.toLowerCase().contains(query))) {
+                    filtered.add(item);
+                }
+            }
+            recyclerView.setAdapter(new ManageCycleListAdapter(filtered, item -> {
+                Intent detail = new Intent(ManageBicycle.this, BicycleDetailActivity.class);
+                detail.putExtra("BICYCLE_ID", item.id);
+                startActivity(detail);
+            }));
+            recyclerView.setVisibility(filtered.isEmpty() ? View.GONE : View.VISIBLE);
+            noData.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
+        } else if (currentScreen == Screen.STATION_CYCLES) {
+            List<ManageCycleListAdapter.Item> filtered = new ArrayList<>();
+            for (ManageCycleListAdapter.Item item : fullStationCycleItems) {
+                if (query.isEmpty() || (item.id != null && item.id.toLowerCase().contains(query))) {
+                    filtered.add(item);
+                }
+            }
+            recyclerView.setAdapter(new ManageCycleListAdapter(filtered, item -> {
+                Intent detail = new Intent(ManageBicycle.this, BicycleDetailActivity.class);
+                detail.putExtra("BICYCLE_ID", item.id);
+                startActivity(detail);
+            }));
+            recyclerView.setVisibility(filtered.isEmpty() ? View.GONE : View.VISIBLE);
+            noData.setVisibility(filtered.isEmpty() ? View.VISIBLE : View.GONE);
+        }
+    }
+
+    private void onAddBicycleClicked() {
+        if (currentScreen == Screen.STATION_CYCLES && stationID != null && !stationID.isEmpty()) {
+            Intent intentAdd = new Intent(ManageBicycle.this, AddOrRemoveBicycle.class);
+            intentAdd.putExtra("Status", "ADD");
+            intentAdd.putExtra("StationId", stationID);
+            intentAdd.putExtra("StationName", stationName);
+            intentAdd.putExtra("AreaId", areaID != null ? areaID : "");
+            startActivity(intentAdd);
+        } else if (currentScreen == Screen.ALL_BICYCLES) {
+            Intent selectStation = new Intent(ManageBicycle.this, SelectStationActivity.class);
+            startActivityForResult(selectStation, REQUEST_SELECT_STATION_FOR_ADD);
+        } else {
+            Toast.makeText(this, "Please select a station first", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void setupSegmentedTabs() {
@@ -177,19 +305,32 @@ public class ManageBicycle extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem addItem = menu.findItem(R.id.add_bicycle);
+        if (addItem != null) {
+            // Show Add Bicycle only when viewing a station's cycles or All Bicycle List (not on Station-Wise List root)
+            addItem.setVisible(currentScreen == Screen.STATION_CYCLES || currentScreen == Screen.ALL_BICYCLES);
+        }
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
         if (item.getItemId() == R.id.add_bicycle) {
-            // Use existing AddOrRemoveBicycle screen (scanner + manual entry UI)
-            if (stationID != null && !stationID.isEmpty()) {
+            if (currentScreen == Screen.STATION_CYCLES && stationID != null && !stationID.isEmpty()) {
                 Intent intentAdd = new Intent(ManageBicycle.this, AddOrRemoveBicycle.class);
                 intentAdd.putExtra("Status", "ADD");
                 intentAdd.putExtra("StationId", stationID);
                 intentAdd.putExtra("StationName", stationName);
-                intentAdd.putExtra("AreaId", areaID);
+                intentAdd.putExtra("AreaId", areaID != null ? areaID : "");
                 startActivity(intentAdd);
+            } else if (currentScreen == Screen.ALL_BICYCLES) {
+                // From All Bicycle List: show station picker, then scanner
+                Intent selectStation = new Intent(ManageBicycle.this, SelectStationActivity.class);
+                startActivityForResult(selectStation, REQUEST_SELECT_STATION_FOR_ADD);
             } else {
-                android.widget.Toast.makeText(this, "Please select a station first", android.widget.Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Please select a station first", Toast.LENGTH_SHORT).show();
             }
 
             // Previous multi-select flow (kept for reference)
@@ -232,46 +373,43 @@ public class ManageBicycle extends AppCompatActivity {
 
     private void showStationList() {
         currentScreen = Screen.STATION_LIST;
+        invalidateOptionsMenu();
         title.setText("Station-Wise List");
         stationID = null;
         stationName = null;
         areaID = null;
         if (segmentRoot != null) segmentRoot.setVisibility(View.VISIBLE);
+        if (searchContainer != null) searchContainer.setVisibility(View.VISIBLE);
+        if (searchBox != null) searchBox.setText("");
+        if (searchClear != null) searchClear.setVisibility(View.GONE);
+        if (addBicycleButton != null) addBicycleButton.setVisibility(View.GONE);
         if (selectedSegment != 0) selectSegment(0, false);
 
         String org = Objects.requireNonNull(sharedPreferences.getString("organisationName", "no_data")).replaceAll(" ", "");
         customLoader.show();
         stationIdToAreaId.clear();
         stationIdToName.clear();
+        fullStationRows.clear();
+        fullBicycleItems.clear();
+        fullStationCycleItems.clear();
 
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(org).child("Station");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<SelectStationActivity.StationRow> rows = new ArrayList<>();
                 for (DataSnapshot child : snapshot.getChildren()) {
                     String sid = child.getKey();
                     if (sid == null) continue;
                     Object snameObj = child.child("stationName").getValue();
                     String sname = snameObj == null ? sid : String.valueOf(snameObj);
-                    rows.add(new SelectStationActivity.StationRow(sid, sname));
-
                     Object areaObj = child.child("areaId").getValue();
-                    if (areaObj != null) stationIdToAreaId.put(sid, String.valueOf(areaObj));
+                    String areaIdStr = areaObj == null ? "" : String.valueOf(areaObj);
+                    stationIdToAreaId.put(sid, areaIdStr);
                     stationIdToName.put(sid, sname);
+                    fullStationRows.add(new SelectStationActivity.StationRow(sid, sname, areaIdStr));
                 }
-
-                SelectStationAdapter adapter = new SelectStationAdapter(rows, stationRow -> {
-                    stationID = stationRow.stationId;
-                    stationName = stationRow.stationName == null ? stationRow.stationId : stationRow.stationName;
-                    areaID = stationIdToAreaId.get(stationID);
-                    showStationCycles(stationID);
-                });
-                recyclerView.setAdapter(adapter);
-
                 customLoader.dismiss();
-                recyclerView.setVisibility(rows.isEmpty() ? View.GONE : View.VISIBLE);
-                noData.setVisibility(rows.isEmpty() ? View.VISIBLE : View.GONE);
+                applySearchFilter();
             }
 
             @Override
@@ -285,37 +423,37 @@ public class ManageBicycle extends AppCompatActivity {
 
     private void showAllBicycles() {
         currentScreen = Screen.ALL_BICYCLES;
+        invalidateOptionsMenu();
         title.setText("All Bicycle List");
         stationID = null;
         stationName = null;
         areaID = null;
         if (segmentRoot != null) segmentRoot.setVisibility(View.VISIBLE);
+        if (searchContainer != null) searchContainer.setVisibility(View.VISIBLE);
+        if (searchBox != null) searchBox.setText("");
+        if (searchClear != null) searchClear.setVisibility(View.GONE);
+        if (addBicycleButton != null) addBicycleButton.setVisibility(View.VISIBLE);
         if (selectedSegment != 1) selectSegment(1, false);
 
+        fullStationRows.clear();
+        fullBicycleItems.clear();
+        fullStationCycleItems.clear();
         String org = Objects.requireNonNull(sharedPreferences.getString("organisationName", "no_data")).replaceAll(" ", "");
         customLoader.show();
         DatabaseReference ref = FirebaseDatabase.getInstance().getReference(org).child("Bicycle");
         ref.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                List<ManageCycleListAdapter.Item> items = new ArrayList<>();
+                fullBicycleItems.clear();
                 for (DataSnapshot child : snapshot.getChildren()) {
                     String bikeId = child.getKey();
                     if (bikeId == null) continue;
                     int percent = parseBatteryPercent(child.child("cyclebattery").getValue(), child.child("battery").getValue());
                     boolean isEBike = isEBike(child.child("type").getValue(), child.child("Type").getValue());
-                    items.add(new ManageCycleListAdapter.Item(bikeId, percent, isEBike));
+                    fullBicycleItems.add(new ManageCycleListAdapter.Item(bikeId, percent, isEBike));
                 }
-
-                recyclerView.setAdapter(new ManageCycleListAdapter(items, item -> {
-                    Intent detail = new Intent(ManageBicycle.this, BicycleDetailActivity.class);
-                    detail.putExtra("BICYCLE_ID", item.id);
-                    startActivity(detail);
-                }));
-
                 customLoader.dismiss();
-                recyclerView.setVisibility(items.isEmpty() ? View.GONE : View.VISIBLE);
-                noData.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+                applySearchFilter();
             }
 
             @Override
@@ -329,10 +467,21 @@ public class ManageBicycle extends AppCompatActivity {
 
     private void showStationCycles(@NonNull String stationId) {
         currentScreen = Screen.STATION_CYCLES;
+        invalidateOptionsMenu();
         title.setText(stationName == null || stationName.isEmpty() ? "Station Cycles" : stationName);
-        // Hide the selector when showing cycles (as requested)
         if (segmentRoot != null) segmentRoot.setVisibility(View.GONE);
+        if (searchContainer != null) searchContainer.setVisibility(View.VISIBLE);
+        if (searchBox != null) {
+            searchBox.setText("");
+            searchBox.clearFocus();
+            hideKeyboard(searchBox);
+        }
+        if (searchClear != null) searchClear.setVisibility(View.GONE);
+        if (addBicycleButton != null) addBicycleButton.setVisibility(View.VISIBLE);
 
+        fullStationRows.clear();
+        fullBicycleItems.clear();
+        fullStationCycleItems.clear();
         String org = Objects.requireNonNull(sharedPreferences.getString("organisationName", "no_data")).replaceAll(" ", "");
         customLoader.show();
 
@@ -343,7 +492,6 @@ public class ManageBicycle extends AppCompatActivity {
         cyclesRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot cyclesSnap) {
-                // Collect station cycles with their stored percentage (fallback to 100)
                 HashMap<String, Integer> stationCycles = new HashMap<>();
                 for (DataSnapshot cycleEntry : cyclesSnap.getChildren()) {
                     String cid = cycleEntry.getKey();
@@ -361,8 +509,7 @@ public class ManageBicycle extends AppCompatActivity {
                 bicycleRef.addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot bikeSnap) {
-                        List<ManageCycleListAdapter.Item> items = new ArrayList<>();
-                        // Build a lookup of type by id
+                        fullStationCycleItems.clear();
                         HashMap<String, String> idToType = new HashMap<>();
                         for (DataSnapshot b : bikeSnap.getChildren()) {
                             String bid = b.getKey();
@@ -376,18 +523,11 @@ public class ManageBicycle extends AppCompatActivity {
                             String cid = entry.getKey();
                             int percent = entry.getValue();
                             boolean isEBike = isEBike(idToType.get(cid), null);
-                            items.add(new ManageCycleListAdapter.Item(cid, percent, isEBike));
+                            fullStationCycleItems.add(new ManageCycleListAdapter.Item(cid, percent, isEBike));
                         }
 
-                        recyclerView.setAdapter(new ManageCycleListAdapter(items, item -> {
-                            Intent detail = new Intent(ManageBicycle.this, BicycleDetailActivity.class);
-                            detail.putExtra("BICYCLE_ID", item.id);
-                            startActivity(detail);
-                        }));
-
                         customLoader.dismiss();
-                        recyclerView.setVisibility(items.isEmpty() ? View.GONE : View.VISIBLE);
-                        noData.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+                        applySearchFilter();
                     }
 
                     @Override
@@ -428,6 +568,25 @@ public class ManageBicycle extends AppCompatActivity {
         String t = String.valueOf(obj).trim();
         if (t.isEmpty()) return false;
         return t.toLowerCase().endsWith("e");
+    }
+
+    @Override
+    @SuppressWarnings("deprecation")
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_SELECT_STATION_FOR_ADD && resultCode == RESULT_OK && data != null) {
+            String sid = data.getStringExtra("stationId");
+            String sname = data.getStringExtra("stationName");
+            String aid = data.getStringExtra("areaId");
+            if (sid != null && !sid.isEmpty()) {
+                Intent intentAdd = new Intent(ManageBicycle.this, AddOrRemoveBicycle.class);
+                intentAdd.putExtra("Status", "ADD");
+                intentAdd.putExtra("StationId", sid);
+                intentAdd.putExtra("StationName", sname != null ? sname : sid);
+                intentAdd.putExtra("AreaId", aid != null ? aid : "");
+                startActivity(intentAdd);
+            }
+        }
     }
 
     @Override
